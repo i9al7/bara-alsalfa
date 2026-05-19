@@ -1,3 +1,4 @@
+import { getDiscordUser } from "./discord";
 import { useEffect, useState } from "react";
 import { socket } from "./socket";
 import "./App.css";
@@ -56,6 +57,32 @@ function App() {
     socket.on("connect_error", err => {
       setError("فشل الاتصال بالسيرفر: " + err.message);
     });
+
+    async function loadDiscordUser() {
+      try {
+        const users = await getDiscordUser();
+
+        if (users?.participants?.length) {
+          discordSdk.commands.authenticate()
+
+          const discordName =
+            me.username ||
+            me.global_name ||
+            me.nickname ||
+            "Player";
+
+          setName(discordName);
+
+          socket.emit("player:join", discordName);
+
+          setJoined(true);
+        }
+      } catch (err) {
+        console.log("Discord SDK not available");
+      }
+    }
+
+    loadDiscordUser();
 
     return () => {
       socket.off("game:update");

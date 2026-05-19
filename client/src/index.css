@@ -1,0 +1,15 @@
+body {
+  margin: 0;
+  font-family: Inter, sans-serif;
+  background: #1e1f22;
+  color: white;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}

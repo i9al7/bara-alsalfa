@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { socket } from "./socket";
 import "./App.css";
 
-const [name, setName] = useState("");
-
 const categories = [
   {
     id: "food",

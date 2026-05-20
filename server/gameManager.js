@@ -1,11 +1,15 @@
 const categories = require("./words");
 
+
+
 let game = {
     state: "LOBBY",
     hostId: null,
     category: "food",
     timeLimit: 60,
     turnStartedAt: null,
+    questionQueue: [],
+    currentTurnIndex: 0,
     players: [],
     spyId: null,
     word: null,
@@ -29,8 +33,10 @@ function getTimeLeft() {
 function publicGame() {
     return {
         ...game,
-        word: null,
-        spyId: null,
+        currentAsker: game.players.find(p => p.id === game.askerId),
+        currentTarget: game.players.find(p => p.id === game.targetId),
+        word: game.state === "RESULTS" ? game.word : null,
+        spyId: game.state === "RESULTS" ? game.spyId : null,
         timeLeft: getTimeLeft()
     };
 }
@@ -77,38 +83,21 @@ function randomItem(arr) {
 }
 
 function pickNextTurn() {
-    const players = game.players;
-
-    if (game.askedTurns.length >= players.length) {
+    if (game.currentTurnIndex >= game.questionQueue.length) {
         game.state = "READY_TO_VOTE";
         game.turnStartedAt = null;
         return;
     }
 
-    let asker;
+    const turn = game.questionQueue[game.currentTurnIndex];
 
-    if (!game.askerId) {
-        asker = randomItem(players);
-    } else {
-        asker = players.find(p => p.id === game.targetId);
-    }
+    game.askerId = turn.askerId;
+    game.targetId = turn.targetId;
 
-    if (!asker) {
-        asker = randomItem(players);
-    }
+    game.askedTurns.push(turn);
 
-    const possibleTargets = players.filter(p =>
-        p.id !== asker.id &&
-        !game.askedTurns.some(t => t.askerId === asker.id && t.targetId === p.id)
-    );
+    game.currentTurnIndex++;
 
-    const target = possibleTargets.length
-        ? randomItem(possibleTargets)
-        : randomItem(players.filter(p => p.id !== asker.id));
-
-    game.askerId = asker.id;
-    game.targetId = target.id;
-    game.askedTurns.push({ askerId: asker.id, targetId: target.id });
     game.turnStartedAt = Date.now();
 }
 
@@ -134,6 +123,10 @@ function startGame(socketId) {
     game.result = null;
     game.turnStartedAt = null;
 
+    game.questionQueue = [];
+    game.currentTurnIndex = 0;
+
+    buildQuestionQueue();
     pickNextTurn();
 
     return { ok: true };
@@ -167,13 +160,28 @@ function readyToVote(playerId) {
 }
 
 function vote(voterId, targetId) {
-    if (game.state !== "VOTING") return;
+    if (game.state !== "VOTING") return { ok: false };
+
+    if (voterId === targetId) {
+        return { ok: false, error: "CANT_VOTE_SELF" };
+    }
+
+    if (game.votes[voterId]) {
+        return { ok: false, error: "ALREADY_VOTED" };
+    }
+
+    const targetExists = game.players.some(p => p.id === targetId);
+    if (!targetExists) {
+        return { ok: false, error: "INVALID_TARGET" };
+    }
 
     game.votes[voterId] = targetId;
 
     if (Object.keys(game.votes).length === game.players.length) {
         finishVoting();
     }
+
+    return { ok: true };
 }
 
 function finishVoting() {
@@ -183,8 +191,15 @@ function finishVoting() {
         counts[id] = (counts[id] || 0) + 1;
     });
 
-    const votedPlayerId = Object.entries(counts)
-        .sort((a, b) => b[1] - a[1])[0][0];
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+
+    if (sorted.length > 1 && sorted[0][1] === sorted[1][1]) {
+        game.state = "RESULTS";
+        game.result = "DRAW";
+        return;
+    }
+
+    const votedPlayerId = sorted[0][0];
 
     if (votedPlayerId === game.spyId) {
         game.state = "SPY_GUESS";
@@ -207,6 +222,25 @@ function spyGuess(playerId, guess) {
     }
 }
 
+function shuffleArray(arr) {
+    return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function buildQuestionQueue() {
+    const shuffled = shuffleArray(game.players);
+
+    game.questionQueue = shuffled.map((player, index) => {
+        const nextPlayer = shuffled[(index + 1) % shuffled.length];
+
+        return {
+            askerId: player.id,
+            targetId: nextPlayer.id
+        };
+    });
+
+    game.currentTurnIndex = 0;
+}
+
 function resetGame() {
     game = {
         state: "LOBBY",
@@ -214,6 +248,8 @@ function resetGame() {
         category: "food",
         timeLimit: 60,
         turnStartedAt: null,
+        questionQueue: [],
+        currentTurnIndex: 0,
         players: game.players || [],
         spyId: null,
         word: null,

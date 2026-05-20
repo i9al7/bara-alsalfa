@@ -10,12 +10,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, "../client/dist")));
-
-app.use((req, res) => {
-    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
-});
-
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -69,6 +63,12 @@ app.post("/api/discord/token", async (req, res) => {
     }
 });
 
+app.use(express.static(path.join(__dirname, "../client/dist")));
+
+app.use((req, res) => {
+    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+});
+
 function emitGame() {
     for (const socket of io.sockets.sockets.values()) {
         socket.emit("game:update", manager.privateGameFor(socket.id));
@@ -76,13 +76,8 @@ function emitGame() {
 }
 
 setInterval(() => {
-    const changed = manager.autoNextTurnIfNeeded();
-
-    if (changed) {
-        emitGame();
-    } else {
-        emitGame();
-    }
+    manager.autoNextTurnIfNeeded();
+    emitGame();
 }, 1000);
 
 io.on("connection", socket => {

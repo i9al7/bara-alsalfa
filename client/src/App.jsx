@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { socket } from "./socket";
+import { setupDiscordUser } from "./discord";
 import "./App.css";
 
 const categories = [

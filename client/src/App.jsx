@@ -1,7 +1,8 @@
-import { getDiscordUser } from "./discord";
 import { useEffect, useState } from "react";
 import { socket } from "./socket";
 import "./App.css";
+
+const [name, setName] = useState("");
 
 const categories = [
   {
@@ -60,25 +61,19 @@ function App() {
 
     async function loadDiscordUser() {
       try {
-        const users = await getDiscordUser();
+        const user = await setupDiscordUser();
 
-        if (users?.participants?.length) {
-          discordSdk.commands.authenticate()
+        const discordName =
+          user.global_name ||
+          user.username ||
+          "Player";
 
-          const discordName =
-            me.username ||
-            me.global_name ||
-            me.nickname ||
-            "Player";
+        setName(discordName);
 
-          setName(discordName);
-
-          socket.emit("player:join", discordName);
-
-          setJoined(true);
-        }
+        socket.emit("player:join", discordName);
+        setJoined(true);
       } catch (err) {
-        console.log("Discord SDK not available");
+        console.log("Discord SDK not available, using manual login");
       }
     }
 

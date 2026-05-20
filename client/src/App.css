@@ -195,6 +195,74 @@ p {
   font-weight: 900;
 }
 
+.timer-text {
+  margin-top: 12px;
+  font-size: 34px;
+  font-weight: 900;
+  text-align: center;
+  transition: .2s;
+}
+
+.timer-danger {
+  color: #ff5d5d;
+  animation: pulse-danger .8s infinite, shake .3s infinite;
+}
+
+.danger-bar {
+  background: linear-gradient(90deg, #ff4d4d, #ed4245) !important;
+  animation: flash-bar .6s infinite;
+}
+
+@keyframes pulse-danger {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes flash-bar {
+  0% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.35);
+  }
+
+  100% {
+    filter: brightness(1);
+  }
+}
+
+@keyframes shake {
+  0% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-2px);
+  }
+
+  50% {
+    transform: translateX(2px);
+  }
+
+  75% {
+    transform: translateX(-2px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
 @media (max-width: 640px) {
   .app {
     padding: 18px;

@@ -3,12 +3,6 @@ import { socket } from "./socket";
 import { setupDiscordUser } from "./discord";
 import "./App.css";
 
-// const categories = [
-//   { id: "food", name: "أكل", words: ["بيتزا", "برجر", "شاورما", "سوشي", "مندي", "كبسة", "باستا"] },
-//   { id: "places", name: "أماكن", words: ["مدرسة", "مستشفى", "مطار", "مطعم", "سينما", "جامعة", "ملعب"] },
-//   { id: "games", name: "ألعاب", words: ["ماينكرافت", "فورتنايت", "فالورانت", "روبلوكس", "فيفا", "GTA"] }
-// ];
-
 function App() {
   const [joined, setJoined] = useState(false);
   const [game, setGame] = useState(null);
@@ -18,9 +12,13 @@ function App() {
   const [mode, setMode] = useState(null);
   const [categories, setCategories] = useState([]);
 
+  const [tickSound] = useState(() => new Audio("/sounds/tick.mp3"));
+  const [endSound] = useState(() => new Audio("/sounds/end.mp3"));
+
   const isHost = !!game?.hostId && game.hostId === socket.id;
   const playersCount = game?.players?.length || 0;
-  const currentCategory = categories.find(cat => cat.id === game?.category) || categories[0];
+  const currentCategory =
+    categories.find(cat => cat.id === game?.category) || categories[0];
 
   useEffect(() => {
     fetch("/api/categories")
@@ -46,15 +44,22 @@ function App() {
     });
 
     socket.on("lobby:error", err => {
-      if (err === "INVALID_CODE") setError("كود الروم غير صحيح");
-      else setError("حدث خطأ أثناء دخول الروم");
+      if (err === "INVALID_CODE") {
+        setError("كود الروم غير صحيح");
+      } else {
+        setError("حدث خطأ أثناء دخول الروم");
+      }
     });
 
     socket.on("game:startResult", res => {
       if (!res.ok) {
-        if (res.error === "NEED_3_PLAYERS") setError("لازم يكون عدد اللاعبين 3 أو أكثر");
-        else if (res.error === "ONLY_HOST") setError("فقط الهوست يقدر يبدأ اللعبة");
-        else setError("حدث خطأ أثناء بدء اللعبة");
+        if (res.error === "NEED_3_PLAYERS") {
+          setError("لازم يكون عدد اللاعبين 3 أو أكثر");
+        } else if (res.error === "ONLY_HOST") {
+          setError("فقط الهوست يقدر يبدأ اللعبة");
+        } else {
+          setError("حدث خطأ أثناء بدء اللعبة");
+        }
       } else {
         setError("");
       }
@@ -67,7 +72,6 @@ function App() {
     async function loadDiscordUser() {
       try {
         const user = await setupDiscordUser();
-
         const discordName = user.global_name || user.username || "Player";
 
         setDiscordUser({
@@ -90,6 +94,22 @@ function App() {
       socket.off("connect_error");
     };
   }, []);
+
+  useEffect(() => {
+    if (game?.state !== "QUESTIONING") return;
+
+    if (game.timeLeft <= 10 && game.timeLeft > 0) {
+      tickSound.currentTime = 0;
+      tickSound.volume = 0.25;
+      tickSound.play().catch(() => { });
+    }
+
+    if (game.timeLeft === 0) {
+      endSound.currentTime = 0;
+      endSound.volume = 0.35;
+      endSound.play().catch(() => { });
+    }
+  }, [game?.timeLeft, game?.state, tickSound, endSound]);
 
   function createLobby() {
     if (!discordUser) {
@@ -137,9 +157,7 @@ function App() {
         <div className="auth-box">
           <h1 className="logo">برا السالفة</h1>
 
-          {!discordUser && (
-            <p>جاري تحميل حساب Discord...</p>
-          )}
+          {!discordUser && <p>جاري تحميل حساب Discord...</p>}
 
           {discordUser && !mode && (
             <div className="row">
@@ -274,16 +292,27 @@ function App() {
 
               <div className="progress">
                 <div
-                  className="progress-bar"
+                  className={`progress-bar ${game.timeLeft <= 10 ? "danger-bar" : ""
+                    }`}
                   style={{
                     width: `${(game.timeLeft / game.timeLimit) * 100}%`
                   }}
                 />
               </div>
 
+              <div
+                className={`timer-text ${game.timeLeft <= 10 ? "timer-danger" : ""
+                  }`}
+              >
+                {game.timeLeft}s
+              </div>
+
               <div className="row">
                 {isHost && (
-                  <button onClick={() => socket.emit("turn:next")} className="button">
+                  <button
+                    onClick={() => socket.emit("turn:next")}
+                    className="button"
+                  >
                     التالي
                   </button>
                 )}
@@ -335,7 +364,7 @@ function App() {
               <h2>تم كشفك!</h2>
               <p>اختر الكلمة الصحيحة:</p>
 
-              {currentCategory.words.map(word => (
+              {currentCategory?.words?.map(word => (
                 <button
                   key={word}
                   onClick={() => socket.emit("spy:guess", word)}

@@ -3,55 +3,61 @@ import { socket } from "./socket";
 import { setupDiscordUser } from "./discord";
 import "./App.css";
 
-const categories = [
-  {
-    id: "food",
-    name: "أكل",
-    words: ["بيتزا", "برجر", "شاورما", "سوشي", "مندي", "كبسة", "باستا"]
-  },
-  {
-    id: "places",
-    name: "أماكن",
-    words: ["مدرسة", "مستشفى", "مطار", "مطعم", "سينما", "جامعة", "ملعب"]
-  },
-  {
-    id: "games",
-    name: "ألعاب",
-    words: ["ماينكرافت", "فورتنايت", "فالورانت", "روبلوكس", "فيفا", "GTA"]
-  }
-];
+// const categories = [
+//   { id: "food", name: "أكل", words: ["بيتزا", "برجر", "شاورما", "سوشي", "مندي", "كبسة", "باستا"] },
+//   { id: "places", name: "أماكن", words: ["مدرسة", "مستشفى", "مطار", "مطعم", "سينما", "جامعة", "ملعب"] },
+//   { id: "games", name: "ألعاب", words: ["ماينكرافت", "فورتنايت", "فالورانت", "روبلوكس", "فيفا", "GTA"] }
+// ];
 
 function App() {
-  const [name, setName] = useState("");
   const [joined, setJoined] = useState(false);
   const [game, setGame] = useState(null);
   const [error, setError] = useState("");
+  const [discordUser, setDiscordUser] = useState(null);
+  const [joinCode, setJoinCode] = useState("");
+  const [mode, setMode] = useState(null);
+  const [categories, setCategories] = useState([]);
 
   const isHost = !!game?.hostId && game.hostId === socket.id;
   const playersCount = game?.players?.length || 0;
   const currentCategory = categories.find(cat => cat.id === game?.category) || categories[0];
 
   useEffect(() => {
-    socket.on("game:update", data => {
-      setGame(data);
+    fetch("/api/categories")
+      .then(res => res.json())
+      .then(data => {
+        const formatted = Object.entries(data).map(([id, value]) => ({
+          id,
+          name: value.name,
+          words: value.words
+        }));
+
+        setCategories(formatted);
+      })
+      .catch(() => {
+        setError("فشل تحميل التصنيفات");
+      });
+
+    socket.on("game:update", data => setGame(data));
+
+    socket.on("lobby:joined", () => {
+      setError("");
+      setJoined(true);
+    });
+
+    socket.on("lobby:error", err => {
+      if (err === "INVALID_CODE") setError("كود الروم غير صحيح");
+      else setError("حدث خطأ أثناء دخول الروم");
     });
 
     socket.on("game:startResult", res => {
       if (!res.ok) {
-        if (res.error === "NEED_3_PLAYERS") {
-          setError("لازم يكون عدد اللاعبين 3 أو أكثر");
-        } else if (res.error === "ONLY_HOST") {
-          setError("فقط الهوست يقدر يبدأ اللعبة");
-        } else {
-          setError("حدث خطأ أثناء بدء اللعبة");
-        }
+        if (res.error === "NEED_3_PLAYERS") setError("لازم يكون عدد اللاعبين 3 أو أكثر");
+        else if (res.error === "ONLY_HOST") setError("فقط الهوست يقدر يبدأ اللعبة");
+        else setError("حدث خطأ أثناء بدء اللعبة");
       } else {
         setError("");
       }
-    });
-
-    socket.on("connect", () => {
-      console.log("Socket connected:", socket.id);
     });
 
     socket.on("connect_error", err => {
@@ -62,17 +68,15 @@ function App() {
       try {
         const user = await setupDiscordUser();
 
-        const discordName =
-          user.global_name ||
-          user.username ||
-          "Player";
+        const discordName = user.global_name || user.username || "Player";
 
-        setName(discordName);
-
-        socket.emit("player:join", discordName);
-        setJoined(true);
-      } catch (err) {
-        console.log("Discord SDK not available, using manual login");
+        setDiscordUser({
+          id: user.id,
+          username: discordName,
+          avatar: user.avatar
+        });
+      } catch {
+        setError("افتح اللعبة من Discord Activity عشان يتم تسجيل دخولك تلقائيًا");
       }
     }
 
@@ -80,22 +84,39 @@ function App() {
 
     return () => {
       socket.off("game:update");
+      socket.off("lobby:joined");
+      socket.off("lobby:error");
       socket.off("game:startResult");
-      socket.off("connect");
       socket.off("connect_error");
     };
   }, []);
 
-  function joinGame() {
-    if (!name.trim()) return;
-
-    if (!socket.connected) {
-      setError("السيرفر غير متصل، تأكد أن backend شغال على 3001");
+  function createLobby() {
+    if (!discordUser) {
+      setError("لم يتم تحميل حساب Discord بعد");
       return;
     }
 
-    socket.emit("player:join", name.trim());
-    setJoined(true);
+    socket.emit("lobby:create", {
+      user: discordUser
+    });
+  }
+
+  function joinLobby() {
+    if (!discordUser) {
+      setError("لم يتم تحميل حساب Discord بعد");
+      return;
+    }
+
+    if (!joinCode.trim()) {
+      setError("اكتب كود الروم");
+      return;
+    }
+
+    socket.emit("lobby:join", {
+      code: joinCode.trim().toUpperCase(),
+      user: discordUser
+    });
   }
 
   function startGame() {
@@ -116,18 +137,56 @@ function App() {
         <div className="auth-box">
           <h1 className="logo">برا السالفة</h1>
 
-          <input
-            placeholder="اسمك"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            className="input"
-          />
+          {!discordUser && (
+            <p>جاري تحميل حساب Discord...</p>
+          )}
+
+          {discordUser && !mode && (
+            <div className="row">
+              <button className="button" onClick={() => setMode("create")}>
+                إنشاء روم
+              </button>
+
+              <button className="button green" onClick={() => setMode("join")}>
+                دخول برمز
+              </button>
+            </div>
+          )}
+
+          {mode === "create" && (
+            <>
+              <p>سيتم إنشاء روم باسم: {discordUser?.username}</p>
+
+              <button className="button" onClick={createLobby}>
+                إنشاء الروم
+              </button>
+
+              <button className="button green" onClick={() => setMode(null)}>
+                رجوع
+              </button>
+            </>
+          )}
+
+          {mode === "join" && (
+            <>
+              <input
+                className="input"
+                placeholder="كود الروم"
+                value={joinCode}
+                onChange={e => setJoinCode(e.target.value)}
+              />
+
+              <button className="button green" onClick={joinLobby}>
+                دخول
+              </button>
+
+              <button className="button" onClick={() => setMode(null)}>
+                رجوع
+              </button>
+            </>
+          )}
 
           {error && <p className="error">{error}</p>}
-
-          <button onClick={joinGame} className="button">
-            دخول
-          </button>
         </div>
       </div>
     );
@@ -139,6 +198,7 @@ function App() {
 
       <div className="card">
         <h2>الحالة: {game?.state}</h2>
+        <p>كود الروم: {game?.roomCode || "—"}</p>
         <p>عدد اللاعبين: {playersCount}</p>
         <p>أنت: {isHost ? "الهوست" : "لاعب"}</p>
       </div>
@@ -186,6 +246,14 @@ function App() {
       <div className="players-grid">
         {game?.players?.map(player => (
           <div key={player.id} className="player-card">
+            <img
+              className="avatar"
+              src={
+                player.avatar
+                  ? `https://cdn.discordapp.com/avatars/${player.discordId}/${player.avatar}.png`
+                  : "https://cdn.discordapp.com/embed/avatars/0.png"
+              }
+            />
             {player.name}
             {player.id === game.hostId && " 👑"}
           </div>
@@ -199,9 +267,9 @@ function App() {
               <h2>مرحلة الأسئلة</h2>
 
               <p>
-                <strong>{game.players.find(p => p.id === game.askerId)?.name}</strong>
+                <strong>{game.currentAsker?.name}</strong>
                 {" يسأل "}
-                <strong>{game.players.find(p => p.id === game.targetId)?.name}</strong>
+                <strong>{game.currentTarget?.name}</strong>
               </p>
 
               <div className="progress">
@@ -215,10 +283,7 @@ function App() {
 
               <div className="row">
                 {isHost && (
-                  <button
-                    onClick={() => socket.emit("turn:next")}
-                    className="button"
-                  >
+                  <button onClick={() => socket.emit("turn:next")} className="button">
                     التالي
                   </button>
                 )}
@@ -257,10 +322,7 @@ function App() {
                   key={player.id}
                   onClick={() => socket.emit("vote:cast", player.id)}
                   className="button"
-                  style={{
-                    marginBottom: 10,
-                    width: "100%"
-                  }}
+                  style={{ marginBottom: 10, width: "100%" }}
                 >
                   {player.name}
                 </button>
@@ -278,10 +340,7 @@ function App() {
                   key={word}
                   onClick={() => socket.emit("spy:guess", word)}
                   className="button"
-                  style={{
-                    marginBottom: 10,
-                    width: "100%"
-                  }}
+                  style={{ marginBottom: 10, width: "100%" }}
                 >
                   {word}
                 </button>
@@ -302,9 +361,13 @@ function App() {
 
               {game.result === "SPY_WINS" ? (
                 <h3>الجاسوس فاز 😈</h3>
+              ) : game.result === "DRAW" ? (
+                <h3>تعادل 🤝</h3>
               ) : (
                 <h3>اللاعبون فازوا 🎉</h3>
               )}
+
+              <p>الكلمة كانت: {game.word}</p>
 
               {isHost && (
                 <button

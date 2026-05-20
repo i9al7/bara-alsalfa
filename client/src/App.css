@@ -2,8 +2,8 @@
   min-height: 100vh;
   padding: 28px;
   background:
-    radial-gradient(circle at top left, rgba(88, 101, 242, 0.25), transparent 35%),
-    radial-gradient(circle at bottom right, rgba(237, 66, 69, 0.18), transparent 35%),
+    radial-gradient(circle at top left, rgba(88, 101, 242, 0.103), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(237, 66, 69, 0.103), transparent 35%),
     #1e1f22;
 }
 
@@ -74,7 +74,20 @@ h3 {
   margin-bottom: 22px;
 }
 
+.avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 10px;
+  border: 2px solid rgba(255, 255, 255, .1);
+}
+
 .player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
   background: rgba(49, 51, 56, 0.95);
   padding: 16px;
   border-radius: 16px;

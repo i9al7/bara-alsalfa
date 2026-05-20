@@ -96,20 +96,60 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (game?.state !== "QUESTIONING") return;
+    if (!game) return;
 
-    if (game.timeLeft <= 10 && game.timeLeft > 0) {
+    // وقف الأصوات إذا مو مرحلة الأسئلة
+    if (game.state !== "QUESTIONING") {
+      tickSound.pause();
       tickSound.currentTime = 0;
-      tickSound.volume = 0.25;
-      tickSound.play().catch(() => { });
+
+      return;
     }
 
+    // آخر 10 ثواني فقط
+    if (
+      game.timeLeft <= 10 &&
+      game.timeLeft > 0
+    ) {
+
+      // شغل الصوت فقط إذا مو شغال
+      if (tickSound.paused) {
+        tickSound.volume = 0.12;
+
+        tickSound.play().catch(() => { });
+      }
+
+    } else {
+
+      // وقف الصوت إذا طلع من آخر 10 ثواني
+      tickSound.pause();
+      tickSound.currentTime = 0;
+    }
+
+    // انتهاء الوقت
     if (game.timeLeft === 0) {
+
+      tickSound.pause();
+      tickSound.currentTime = 0;
+
+      endSound.volume = 0.22;
+
       endSound.currentTime = 0;
-      endSound.volume = 0.35;
+
       endSound.play().catch(() => { });
     }
-  }, [game?.timeLeft, game?.state, tickSound, endSound]);
+
+  }, [game?.timeLeft, game?.state]);
+
+  useEffect(() => {
+    return () => {
+      tickSound.pause();
+      tickSound.currentTime = 0;
+
+      endSound.pause();
+      endSound.currentTime = 0;
+    };
+  }, []);
 
   function createLobby() {
     if (!discordUser) {

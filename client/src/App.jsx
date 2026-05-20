@@ -324,11 +324,19 @@ function App() {
             <div className="card">
               <h2>مرحلة الأسئلة</h2>
 
-              <p>
-                <strong>{game.currentAsker?.name}</strong>
-                {" يسأل "}
-                <strong>{game.currentTarget?.name}</strong>
-              </p>
+              <div className="question-turn">
+                <div className="turn-player asker">
+                  <span className="turn-label">السائل</span>
+                  <strong>{game.currentAsker?.name}</strong>
+                </div>
+
+                <div className="turn-arrow">يسأل</div>
+
+                <div className="turn-player target">
+                  <span className="turn-label">المجيب</span>
+                  <strong>{game.currentTarget?.name}</strong>
+                </div>
+              </div>
 
               <div className="progress">
                 <div

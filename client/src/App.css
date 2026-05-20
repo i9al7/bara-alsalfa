@@ -195,6 +195,49 @@ p {
   font-weight: 900;
 }
 
+.question-turn {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 12px;
+  align-items: center;
+  margin: 18px 0;
+}
+
+.turn-player {
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 16px;
+  padding: 14px;
+  text-align: center;
+}
+
+.turn-label {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.turn-player strong {
+  font-size: 18px;
+  color: white;
+}
+
+.turn-arrow {
+  color: #57f287;
+  font-weight: 900;
+}
+
+@media (max-width: 640px) {
+  .question-turn {
+    grid-template-columns: 1fr;
+  }
+
+  .turn-arrow {
+    text-align: center;
+  }
+}
+
 .timer-text {
   margin-top: 12px;
   font-size: 34px;

@@ -318,7 +318,29 @@ function App() {
               }
             />
             {player.name}
-            {player.id === game.hostId && " 👑"}
+            {player.id === game.hostId && (
+              <div className="host-badge">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="host-icon"
+                >
+                  <path
+                    d="M5 18L3 7L8 10L12 4L16 10L21 7L19 18H5Z"
+                    fill="currentColor"
+                  />
+
+                  <path
+                    d="M7 21H17"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+
+                <span>هوست</span>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -442,11 +464,79 @@ function App() {
               <h2>النتيجة</h2>
 
               {game.result === "SPY_WINS" ? (
-                <h3>الجاسوس فاز 😈</h3>
+                <h3 className="result-title spy-win">
+                  <svg
+                    className="result-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <path
+                      d="M12 3L4 7V12C4 17 7.5 21 12 22C16.5 21 20 17 20 12V7L12 3Z"
+                      fill="currentColor"
+                    />
+
+                    <path
+                      d="M9 12L11 14L15 10"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+
+                  <span>الجاسوس فاز</span>
+                </h3>
               ) : game.result === "DRAW" ? (
-                <h3>تعادل 🤝</h3>
+
+                <h3 className="result-title draw-result">
+                  <svg
+                    className="result-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <path
+                      d="M8 12H16"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                    />
+
+                    <path
+                      d="M12 8V16"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                    />
+
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="9"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                  </svg>
+
+                  <span>تعادل</span>
+                </h3>
+
               ) : (
-                <h3>اللاعبون فازوا 🎉</h3>
+
+                <h3 className="result-title players-win">
+                  <svg
+                    className="result-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <path
+                      d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+
+                  <span>اللاعبون فازوا</span>
+                </h3>
+
               )}
 
               <p>الكلمة كانت: {game.word}</p>
@@ -463,7 +553,28 @@ function App() {
           )}
 
           {game?.myRole === "SPY" ? (
-            <div className="role-box spy">😈 أنت برا السالفة</div>
+            <div className="role-box spy">
+              <svg
+                className="spy-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M12 3L4 7V12C4 17 7.5 21 12 22C16.5 21 20 17 20 12V7L12 3Z"
+                  fill="currentColor"
+                />
+
+                <path
+                  d="M9 12L11 14L15 10"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+
+              <span>أنت برا السالفة</span>
+            </div>
           ) : game?.myWord ? (
             <div className="role-box word">الكلمة: {game.myWord}</div>
           ) : null}

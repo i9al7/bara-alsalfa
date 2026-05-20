@@ -263,6 +263,80 @@ p {
   margin-right: 8px;
 }
 
+.spy-icon {
+  width: 72px;
+  height: 72px;
+
+  margin-bottom: 14px;
+
+  color: white;
+
+  filter:
+    drop-shadow(0 0 18px rgba(255, 255, 255, .25));
+}
+
+.role-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  font-size: 30px;
+  font-weight: 950;
+}
+
+.result-icon {
+  width: 34px;
+  height: 34px;
+
+  color: white;
+}
+
+.spy-win {
+  color: #ff6b6b;
+}
+
+.draw-result {
+  color: #ffd166;
+}
+
+.players-win {
+  color: #57f287;
+}
+
+.host-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 10px;
+
+  background: rgba(255, 209, 102, .12);
+
+  border: 1px solid rgba(255, 209, 102, .22);
+
+  color: #ffd166;
+
+  padding: 6px 10px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.host-icon {
+  width: 14px;
+  height: 14px;
+}
+
 .timer-text {
   margin-top: 12px;
   font-size: 34px;

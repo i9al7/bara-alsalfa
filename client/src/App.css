@@ -11,6 +11,11 @@
   --muted: rgba(255, 255, 255, 0.68);
 }
 
+body {
+  direction: rtl;
+  text-align: right;
+}
+
 .app,
 .center-screen {
   min-height: 100vh;
@@ -22,12 +27,17 @@
 }
 
 .app {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  direction: rtl;
   padding: 28px;
   max-width: 1180px;
   margin: 0 auto;
 }
 
 h1 {
+  text-align: center;
   font-size: 44px;
   font-weight: 950;
   margin: 0 0 24px;
@@ -52,6 +62,10 @@ p {
   border: 1px solid var(--border);
   box-shadow: 0 18px 42px rgba(0, 0, 0, .32);
   backdrop-filter: blur(12px);
+}
+
+.card {
+  text-align: right;
 }
 
 .input {
@@ -228,14 +242,25 @@ p {
   font-weight: 900;
 }
 
-@media (max-width: 640px) {
-  .question-turn {
-    grid-template-columns: 1fr;
-  }
+.room-code {
+  direction: ltr;
+  unicode-bidi: embed;
 
-  .turn-arrow {
-    text-align: center;
-  }
+  display: inline-block;
+
+  background: rgba(88, 101, 242, .15);
+
+  color: #8ea1ff;
+
+  padding: 4px 10px;
+
+  border-radius: 10px;
+
+  font-weight: 900;
+
+  letter-spacing: 1px;
+
+  margin-right: 8px;
 }
 
 .timer-text {
@@ -328,5 +353,13 @@ p {
 
   .button {
     width: 100%;
+  }
+
+  .question-turn {
+    grid-template-columns: 1fr;
+  }
+
+  .turn-arrow {
+    text-align: center;
   }
 }

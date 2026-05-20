@@ -256,7 +256,12 @@ function App() {
 
       <div className="card">
         <h2>الحالة: {game?.state}</h2>
-        <p>كود الروم: {game?.roomCode || "—"}</p>
+        <p>
+          كود الروم:
+          <span className="room-code">
+            {game?.roomCode || "—"}
+          </span>
+        </p>
         <p>عدد اللاعبين: {playersCount}</p>
         <p>أنت: {isHost ? "الهوست" : "لاعب"}</p>
       </div>

@@ -13,7 +13,6 @@ function createInitialGame(keepPlayers = []) {
         category: DEFAULT_CATEGORY,
         timeLimit: DEFAULT_TIME_LIMIT,
         turnStartedAt: null,
-
         roomCode: null,
 
         lobbyReady: [],
@@ -25,7 +24,6 @@ function createInitialGame(keepPlayers = []) {
 
         spyId: null,
         word: null,
-
         askerId: null,
         targetId: null,
         askedTurns: [],
@@ -52,25 +50,6 @@ function generateRoomCode() {
 
 function getRoomCode() {
     return game.roomCode;
-}
-
-function toggleLobbyReady(playerId) {
-    if (game.state !== "LOBBY") {
-        return { ok: false, error: "INVALID_STATE" };
-    }
-
-    const exists = game.players.some(p => p.id === playerId);
-    if (!exists) {
-        return { ok: false, error: "PLAYER_NOT_FOUND" };
-    }
-
-    if (game.lobbyReady.includes(playerId)) {
-        game.lobbyReady = game.lobbyReady.filter(id => id !== playerId);
-    } else {
-        game.lobbyReady.push(playerId);
-    }
-
-    return { ok: true };
 }
 
 function getPlayer(socketId) {
@@ -112,34 +91,25 @@ function createLobby(hostId) {
     game.hostId = hostId;
     game.roomCode = generateRoomCode();
 
-    return {
-        ok: true,
-        roomCode: game.roomCode
-    };
+    return { ok: true, roomCode: game.roomCode };
 }
 
 function addPlayer(socketId, user) {
-    if (!user) {
-        return { ok: false, error: "INVALID_USER" };
-    }
+    if (!user) return { ok: false, error: "INVALID_USER" };
 
     if (!game.roomCode) {
         createLobby(socketId);
     }
 
     const alreadyConnected = game.players.find(player => player.id === socketId);
-    if (alreadyConnected) {
-        return { ok: true, player: alreadyConnected };
-    }
+    if (alreadyConnected) return { ok: true, player: alreadyConnected };
 
     const duplicateDiscord = game.players.find(player => player.discordId === user.id);
     if (duplicateDiscord) {
         duplicateDiscord.id = socketId;
         duplicateDiscord.socketId = socketId;
 
-        if (!game.hostId) {
-            game.hostId = socketId;
-        }
+        if (!game.hostId) game.hostId = socketId;
 
         return { ok: true, player: duplicateDiscord };
     }
@@ -154,20 +124,15 @@ function addPlayer(socketId, user) {
 
     game.players.push(player);
 
-    if (!game.hostId) {
-        game.hostId = socketId;
-    }
+    if (!game.hostId) game.hostId = socketId;
 
-    return {
-        ok: true,
-        player
-    };
+    return { ok: true, player };
 }
 
 function removePlayer(socketId) {
     game.players = game.players.filter(player => player.id !== socketId);
-
     game.ready = game.ready.filter(id => id !== socketId);
+    game.lobbyReady = game.lobbyReady.filter(id => id !== socketId);
 
     delete game.votes[socketId];
 
@@ -203,6 +168,24 @@ function setSettings(socketId, settings) {
 
     if ([30, 45, 60, 90, 120].includes(nextLimit)) {
         game.timeLimit = nextLimit;
+    }
+
+    return { ok: true };
+}
+
+function toggleLobbyReady(playerId) {
+    if (game.state !== "LOBBY") {
+        return { ok: false, error: "INVALID_STATE" };
+    }
+
+    if (!getPlayer(playerId)) {
+        return { ok: false, error: "PLAYER_NOT_FOUND" };
+    }
+
+    if (game.lobbyReady.includes(playerId)) {
+        game.lobbyReady = game.lobbyReady.filter(id => id !== playerId);
+    } else {
+        game.lobbyReady.push(playerId);
     }
 
     return { ok: true };
@@ -248,12 +231,6 @@ function pickNextTurn() {
     game.turnStartedAt = Date.now();
 }
 
-const readyPlayers = game.lobbyReady.length;
-
-if (readyPlayers < 3 || readyPlayers !== game.players.length) {
-    return { ok: false, error: "PLAYERS_NOT_READY" };
-}
-
 function startGame(socketId) {
     if (socketId !== game.hostId) {
         return { ok: false, error: "ONLY_HOST" };
@@ -267,7 +244,14 @@ function startGame(socketId) {
         return { ok: false, error: "NEED_3_PLAYERS" };
     }
 
-    const categoryWords = categories[game.category]?.words || categories[DEFAULT_CATEGORY].words;
+    const readyPlayers = game.lobbyReady.length;
+
+    if (readyPlayers < MIN_PLAYERS || readyPlayers !== game.players.length) {
+        return { ok: false, error: "PLAYERS_NOT_READY" };
+    }
+
+    const categoryWords =
+        categories[game.category]?.words || categories[DEFAULT_CATEGORY].words;
 
     game.state = "QUESTIONING";
     game.spyId = randomItem(game.players).id;
@@ -285,7 +269,6 @@ function startGame(socketId) {
     game.spyGuess = null;
 
     game.turnStartedAt = null;
-
     game.questionQueue = [];
     game.currentTurnIndex = 0;
 
@@ -425,8 +408,6 @@ function spyGuess(playerId, guess) {
 function resetGame() {
     const players = game.players;
 
-    lobbyReady: [];
-
     game = createInitialGame(players);
     game.roomCode = generateRoomCode();
 
@@ -445,6 +426,7 @@ module.exports = {
     removePlayer,
     setSettings,
     toggleLobbyReady,
+
     startGame,
     nextTurn,
     autoNextTurnIfNeeded,

@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { socket } from "./socket";
 import { setupDiscordUser } from "./discord";
+import { translations } from "./lang";
 import "./App.css";
 
 function App() {
+  const [lang, setLang] = useState("ar");
+  const t = translations[lang];
+
   const [joined, setJoined] = useState(false);
   const [game, setGame] = useState(null);
   const [error, setError] = useState("");
@@ -21,48 +25,44 @@ function App() {
   const lobbyReadyCount = game?.lobbyReady?.length || 0;
   const isLobbyReady = game?.lobbyReady?.includes(socket.id);
   const allPlayersReady = playersCount >= 3 && lobbyReadyCount === playersCount;
-
-  const currentCategory =
-    categories.find(cat => cat.id === game?.category) || categories[0];
+  const currentCategory = categories.find(cat => cat.id === game?.category) || categories[0];
 
   useEffect(() => {
     fetch("/api/categories")
       .then(res => res.json())
       .then(data => {
-        const formatted = Object.entries(data).map(([id, value]) => ({
-          id,
-          name: value.name,
-          words: value.words
-        }));
-        setCategories(formatted);
+        setCategories(
+          Object.entries(data).map(([id, value]) => ({
+            id,
+            name: value.name,
+            words: value.words
+          }))
+        );
       })
-      .catch(() => setError("فشل تحميل التصنيفات"));
+      .catch(() => setError(t.failedCategories));
 
     socket.on("game:update", data => setGame(data));
-
     socket.on("lobby:joined", () => {
       setError("");
       setJoined(true);
     });
 
     socket.on("lobby:error", err => {
-      setError(err === "INVALID_CODE" ? "كود الروم غير صحيح" : "حدث خطأ أثناء دخول الروم");
+      setError(err === "INVALID_CODE" ? t.invalidCode : t.joinError);
     });
 
     socket.on("game:startResult", res => {
       if (!res.ok) {
-        if (res.error === "NEED_3_PLAYERS") setError("لازم يكون عدد اللاعبين 3 أو أكثر");
-        else if (res.error === "ONLY_HOST") setError("فقط المضيف يقدر يبدأ اللعبة");
-        else if (res.error === "PLAYERS_NOT_READY") setError("كل اللاعبين لازم يكونون جاهزين قبل بدء اللعبة");
-        else setError("حدث خطأ أثناء بدء اللعبة");
+        if (res.error === "NEED_3_PLAYERS") setError(t.needPlayers);
+        else if (res.error === "ONLY_HOST") setError(t.onlyHost);
+        else if (res.error === "PLAYERS_NOT_READY") setError(t.playersNotReady);
+        else setError(t.startError);
       } else {
         setError("");
       }
     });
 
-    socket.on("connect_error", err => {
-      setError("فشل الاتصال بالسيرفر: " + err.message);
-    });
+    socket.on("connect_error", err => setError(`${t.serverError}: ${err.message}`));
 
     async function loadDiscordUser() {
       try {
@@ -75,7 +75,7 @@ function App() {
           avatar: user.avatar
         });
       } catch {
-        setError("افتح اللعبة من Discord Activity عشان يتم تسجيل دخولك تلقائيًا");
+        setError(t.openInDiscord);
       } finally {
         setLoading(false);
       }
@@ -90,7 +90,7 @@ function App() {
       socket.off("game:startResult");
       socket.off("connect_error");
     };
-  }, []);
+  }, [lang]);
 
   useEffect(() => {
     if (!game) return;
@@ -130,13 +130,13 @@ function App() {
   }, [tickSound, endSound]);
 
   function createLobby() {
-    if (!discordUser) return setError("لم يتم تحميل حساب Discord بعد");
+    if (!discordUser) return setError(t.discordNotLoaded);
     socket.emit("lobby:create", { user: discordUser });
   }
 
   function joinLobby() {
-    if (!discordUser) return setError("لم يتم تحميل حساب Discord بعد");
-    if (!joinCode.trim()) return setError("اكتب كود الروم");
+    if (!discordUser) return setError(t.discordNotLoaded);
+    if (!joinCode.trim()) return setError(t.enterCode);
 
     socket.emit("lobby:join", {
       code: joinCode.trim().toUpperCase(),
@@ -156,18 +156,19 @@ function App() {
   function changeCategory(category) {
     socket.emit("host:settings", {
       category,
+      lang,
       timeLimit: game?.timeLimit || 60
     });
   }
 
   if (loading) {
     return (
-      <div className="loading-screen fade-in">
+      <div className="loading-screen fade-in" dir={lang === "ar" ? "rtl" : "ltr"}>
         <div className="loading-card scale-in">
           <div className="loading-logo">
-            <img src="/bara-alsalfa-logo.png" alt="برا السالفة" />
+            <img src="/bara-alsalfa-logo.png" alt={t.title} />
           </div>
-          <p>جاري تحميل اللعبة...</p>
+          <p>{t.loading}</p>
           <div className="loading-spinner" />
         </div>
       </div>
@@ -176,36 +177,30 @@ function App() {
 
   if (!joined) {
     return (
-      <div className="center-screen fade-in">
+      <div className="center-screen fade-in" dir={lang === "ar" ? "rtl" : "ltr"}>
         <div className="auth-box scale-in">
-          <h1 className="logo">برا السالفة</h1>
+          <div className="lang-switch">
+            <button className={lang === "ar" ? "active-lang" : ""} onClick={() => setLang("ar")}>عربي</button>
+            <button className={lang === "en" ? "active-lang" : ""} onClick={() => setLang("en")}>English</button>
+          </div>
 
-          {!discordUser && <p>جاري تحميل حساب Discord...</p>}
+          <h1 className="logo">{t.title}</h1>
+
+          {!discordUser && <p>{t.loadingDiscord}</p>}
 
           {discordUser && !mode && (
             <div className="row slide-up">
-              <button className="button" onClick={() => setMode("create")}>
-                إنشاء روم
-              </button>
-
-              <button className="button green" onClick={() => setMode("join")}>
-                دخول برمز
-              </button>
+              <button className="button" onClick={() => setMode("create")}>{t.createRoom}</button>
+              <button className="button green" onClick={() => setMode("join")}>{t.joinRoom}</button>
             </div>
           )}
 
           {mode === "create" && (
             <div className="slide-up">
-              <p>سيتم إنشاء روم باسم: {discordUser?.username}</p>
-
+              <p>{t.createAs}: {discordUser?.username}</p>
               <div className="row">
-                <button className="button" onClick={createLobby}>
-                  إنشاء الروم
-                </button>
-
-                <button className="button green" onClick={() => setMode(null)}>
-                  رجوع
-                </button>
+                <button className="button" onClick={createLobby}>{t.createRoom}</button>
+                <button className="button green" onClick={() => setMode(null)}>{t.back}</button>
               </div>
             </div>
           )}
@@ -214,19 +209,14 @@ function App() {
             <div className="slide-up">
               <input
                 className="input"
-                placeholder="كود الروم"
+                placeholder={t.roomCode}
                 value={joinCode}
                 onChange={e => setJoinCode(e.target.value)}
               />
 
               <div className="row">
-                <button className="button green" onClick={joinLobby}>
-                  دخول
-                </button>
-
-                <button className="button" onClick={() => setMode(null)}>
-                  رجوع
-                </button>
+                <button className="button green" onClick={joinLobby}>{t.join}</button>
+                <button className="button" onClick={() => setMode(null)}>{t.back}</button>
               </div>
             </div>
           )}
@@ -238,105 +228,80 @@ function App() {
   }
 
   return (
-    <div className="app fade-in">
-      <h1 className="slide-up">برا السالفة</h1>
+    <div className="app fade-in" dir={lang === "ar" ? "rtl" : "ltr"}>
+      <div className="lang-switch">
+        <button className={lang === "ar" ? "active-lang" : ""} onClick={() => setLang("ar")}>عربي</button>
+        <button className={lang === "en" ? "active-lang" : ""} onClick={() => setLang("en")}>English</button>
+      </div>
+
+      <h1 className="slide-up">{t.title}</h1>
 
       <div className="card slide-up">
-        <h2>الحالة: {game?.state}</h2>
-        <p>
-          كود الروم:
-          <span className="room-code">{game?.roomCode || "—"}</span>
-        </p>
-        <p>عدد اللاعبين: {playersCount}</p>
-        <p>الجاهزون: {lobbyReadyCount} / {playersCount}</p>
-        <p>أنت: {isHost ? "المضيف" : "لاعب"}</p>
+        <h2>{t.status}: {game?.state}</h2>
+        <p>{t.roomCode}: <span className="room-code">{game?.roomCode || "—"}</span></p>
+        <p>{t.players}: {playersCount}</p>
+        <p>{t.readyPlayers}: {lobbyReadyCount} / {playersCount}</p>
+        <p>{t.youAre}: {isHost ? t.host : t.player}</p>
       </div>
 
       {game?.state === "LOBBY" && (
         <div className="card slide-up">
-          <h3>جاهزية اللاعبين</h3>
-
-          <button
-            className={isLobbyReady ? "button" : "button green"}
-            onClick={toggleLobbyReady}
-          >
-            {isLobbyReady ? "إلغاء الجاهزية" : "أنا جاهز"}
+          <h3>{t.readyCheck}</h3>
+          <button className={isLobbyReady ? "button" : "button green"} onClick={toggleLobbyReady}>
+            {isLobbyReady ? t.unreadyButton : t.readyButton}
           </button>
-
-          <p>
-            لازم كل اللاعبين يكونون جاهزين قبل بدء اللعبة.
-          </p>
+          <p>{t.readyHint}</p>
         </div>
       )}
 
       {isHost && game?.state === "LOBBY" && (
         <div className="card host-controls slide-up">
           <div className="host-controls-header">
-            <h3>لوحة تحكم المضيف</h3>
-            <span className="host-status">مضيف</span>
+            <h3>{t.hostControls}</h3>
+            <span className="host-status">{t.host}</span>
           </div>
 
-          <label className="field-label">التصنيف</label>
+          <label className="field-label">{t.category}</label>
+          <select value={game?.category || "food"} onChange={e => changeCategory(e.target.value)} className="input">
+            {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name?.[lang] || cat.name}</option>)}
+          </select>
+
+          <label className="field-label">{t.questionTime}</label>
           <select
-            value={game?.category || "food"}
-            onChange={e => changeCategory(e.target.value)}
+            value={game?.timeLimit || 60}
+            onChange={e => socket.emit("host:settings", {
+              category: game?.category || "food",
+              timeLimit: Number(e.target.value)
+            })}
             className="input"
           >
-            {categories.map(cat => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
+            {[30, 45, 60, 90, 120].map(sec => (
+              <option key={sec} value={sec}>{sec} {t.seconds}</option>
             ))}
           </select>
 
-          <label className="field-label">وقت السؤال</label>
-          <select
-            value={game?.timeLimit || 60}
-            onChange={e =>
-              socket.emit("host:settings", {
-                category: game?.category || "food",
-                timeLimit: Number(e.target.value)
-              })
-            }
-            className="input"
-          >
-            <option value={30}>30 ثانية</option>
-            <option value={45}>45 ثانية</option>
-            <option value={60}>60 ثانية</option>
-            <option value={90}>90 ثانية</option>
-            <option value={120}>120 ثانية</option>
-          </select>
-
           <div className="host-info">
-            <span>اللاعبين: {playersCount}</span>
-            <span>الجاهزون: {lobbyReadyCount} / {playersCount}</span>
+            <span>{t.players}: {playersCount}</span>
+            <span>{t.readyPlayers}: {lobbyReadyCount} / {playersCount}</span>
           </div>
 
-          <button
-            onClick={startGame}
-            disabled={!allPlayersReady}
-            className="button start-button"
-          >
-            بدء اللعبة
+          <button onClick={startGame} disabled={!allPlayersReady} className="button start-button">
+            {t.startGame}
           </button>
 
-          {!allPlayersReady && (
-            <p className="error">
-              تحتاج 3 لاعبين أو أكثر، وكل اللاعبين لازم يكونون جاهزين.
-            </p>
-          )}
+          {!allPlayersReady && <p className="error">{t.needReadyAll}</p>}
         </div>
       )}
 
       {!isHost && game?.state === "LOBBY" && (
         <div className="card slide-up">
-          <p>انتظر المضيف يختار التصنيف ويبدأ اللعبة</p>
+          <p>{t.waitingHost}</p>
         </div>
       )}
 
       {error && <p className="error slide-up">{error}</p>}
 
-      <h3 className="slide-up">اللاعبين</h3>
+      <h3 className="slide-up">{t.playersList}</h3>
 
       <div className="players-grid">
         {game?.players?.map(player => {
@@ -346,11 +311,7 @@ function App() {
             <div key={player.id} className="player-card scale-in">
               <img
                 className="avatar"
-                src={
-                  player.avatar
-                    ? `https://cdn.discordapp.com/avatars/${player.discordId}/${player.avatar}.png`
-                    : "https://cdn.discordapp.com/embed/avatars/0.png"
-                }
+                src={player.avatar ? `https://cdn.discordapp.com/avatars/${player.discordId}/${player.avatar}.png` : "https://cdn.discordapp.com/embed/avatars/0.png"}
                 alt={player.name}
               />
 
@@ -358,25 +319,13 @@ function App() {
 
               {game?.state === "LOBBY" && (
                 <div className={ready ? "ready-badge" : "not-ready-badge"}>
-                  {ready ? "جاهز" : "غير جاهز"}
+                  {ready ? t.ready : t.notReady}
                 </div>
               )}
 
               {player.id === game.hostId && (
                 <div className="host-badge">
-                  <svg viewBox="0 0 24 24" fill="none" className="host-icon">
-                    <path
-                      d="M5 18L3 7L8 10L12 4L16 10L21 7L19 18H5Z"
-                      fill="currentColor"
-                    />
-                    <path
-                      d="M7 21H17"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span>مضيف</span>
+                  <span>{t.host}</span>
                 </div>
               )}
             </div>
@@ -388,18 +337,18 @@ function App() {
         <>
           {game?.state === "QUESTIONING" && (
             <div className="card slide-up">
-              <h2>مرحلة الأسئلة</h2>
+              <h2>{t.questioning}</h2>
 
               <div className="question-turn">
                 <div className="turn-player asker scale-in">
-                  <span className="turn-label">السائل</span>
+                  <span className="turn-label">{t.asker}</span>
                   <strong>{game.currentAsker?.name}</strong>
                 </div>
 
-                <div className="turn-arrow">يسأل</div>
+                <div className="turn-arrow">{t.asks}</div>
 
                 <div className="turn-player target scale-in">
-                  <span className="turn-label">المجيب</span>
+                  <span className="turn-label">{t.answerer}</span>
                   <strong>{game.currentTarget?.name}</strong>
                 </div>
               </div>
@@ -408,9 +357,7 @@ function App() {
                 <div
                   key={game.currentTurnIndex}
                   className={`progress-bar ${game.timeLeft <= 10 ? "danger-bar" : ""}`}
-                  style={{
-                    width: `${(game.timeLeft / game.timeLimit) * 100}%`
-                  }}
+                  style={{ width: `${(game.timeLeft / game.timeLimit) * 100}%` }}
                 />
               </div>
 
@@ -419,34 +366,24 @@ function App() {
               </div>
 
               <div className="row">
-                {isHost && (
-                  <button onClick={() => socket.emit("turn:next")} className="button">
-                    التالي
-                  </button>
-                )}
-
-                <button onClick={() => socket.emit("vote:ready")} className="button green">
-                  جاهز للتصويت
-                </button>
+                {isHost && <button onClick={() => socket.emit("turn:next")} className="button">{t.next}</button>}
+                <button onClick={() => socket.emit("vote:ready")} className="button green">{t.readyToVote}</button>
               </div>
             </div>
           )}
 
           {game?.state === "READY_TO_VOTE" && (
             <div className="card scale-in">
-              <h2>بانتظار جميع اللاعبين...</h2>
-              <p>جاهزين: {game.ready.length} / {game.players.length}</p>
-
-              <button onClick={() => socket.emit("vote:ready")} className="button green">
-                أنا جاهز للتصويت
-              </button>
+              <h2>{t.waitingPlayers}</h2>
+              <p>{t.readyPlayers}: {game.ready.length} / {game.players.length}</p>
+              <button onClick={() => socket.emit("vote:ready")} className="button green">{t.readyToVote}</button>
             </div>
           )}
 
           {game?.state === "VOTING" && (
             <div className="card scale-in">
-              <h2>التصويت</h2>
-              <p>من هو برا السالفة؟</p>
+              <h2>{t.voting}</h2>
+              <p>{t.whoIsSpy}</p>
 
               {game.players.map(player => (
                 <button
@@ -463,8 +400,8 @@ function App() {
 
           {game?.state === "SPY_GUESS" && game?.myRole === "SPY" && (
             <div className="card scale-in">
-              <h2>تم كشفك!</h2>
-              <p>اختر الكلمة الصحيحة:</p>
+              <h2>{t.youWereCaught}</h2>
+              <p>{t.chooseWord}</p>
 
               {currentCategory?.words?.map(word => (
                 <button
@@ -481,68 +418,28 @@ function App() {
 
           {game?.state === "SPY_GUESS" && game?.myRole !== "SPY" && (
             <div className="card scale-in">
-              <h2>تم كشف الجاسوس</h2>
-              <p>ننتظر الجاسوس يحاول يخمن الكلمة...</p>
+              <h2>{t.spyCaught}</h2>
+              <p>{t.waitSpyGuess}</p>
             </div>
           )}
 
           {game?.state === "RESULTS" && (
             <div className="card scale-in">
-              <h2>النتيجة</h2>
+              <h2>{t.results}</h2>
 
               {game.result === "SPY_WINS" ? (
-                <h3 className="result-title spy-win">
-                  <svg className="result-icon" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M12 3L4 7V12C4 17 7.5 21 12 22C16.5 21 20 17 20 12V7L12 3Z"
-                      fill="currentColor"
-                    />
-                    <path
-                      d="M9 12L11 14L15 10"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span>الجاسوس فاز</span>
-                </h3>
+                <h3 className="result-title spy-win">{t.spyWon}</h3>
               ) : game.result === "DRAW" ? (
-                <h3 className="result-title draw-result">
-                  <svg className="result-icon" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M8 12H16"
-                      stroke="currentColor"
-                      strokeWidth="2.4"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M12 8V16"
-                      stroke="currentColor"
-                      strokeWidth="2.4"
-                      strokeLinecap="round"
-                    />
-                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
-                  </svg>
-                  <span>تعادل</span>
-                </h3>
+                <h3 className="result-title draw-result">{t.draw}</h3>
               ) : (
-                <h3 className="result-title players-win">
-                  <svg className="result-icon" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  <span>اللاعبون فازوا</span>
-                </h3>
+                <h3 className="result-title players-win">{t.playersWon}</h3>
               )}
 
-              <p>الكلمة كانت: {game.word}</p>
+              <p>{t.wordWas}: {game.word}</p>
 
               {isHost && (
                 <button onClick={() => socket.emit("game:reset")} className="button">
-                  جولة جديدة
+                  {t.newRound}
                 </button>
               )}
             </div>
@@ -550,25 +447,11 @@ function App() {
 
           {game?.myRole === "SPY" ? (
             <div className="role-box spy reveal-pop">
-              <svg className="spy-icon" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 3L4 7V12C4 17 7.5 21 12 22C16.5 21 20 17 20 12V7L12 3Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M9 12L11 14L15 10"
-                  stroke="white"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-
-              <span>أنت برا السالفة</span>
+              <span>{t.youAreSpy}</span>
             </div>
           ) : game?.myWord ? (
             <div className="role-box word reveal-pop">
-              الكلمة: {game.myWord}
+              {t.word}: {game.myWord}
             </div>
           ) : null}
         </>

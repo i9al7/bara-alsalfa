@@ -746,6 +746,32 @@ p {
   margin-top: 8px;
 }
 
+.lang-switch {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.lang-switch button {
+  background: rgba(255, 255, 255, .06);
+
+  border: 1px solid rgba(255, 255, 255, .08);
+
+  color: white;
+
+  padding: 8px 14px;
+
+  border-radius: 999px;
+
+  cursor: pointer;
+
+  transition: .2s;
+}
+
+.active-lang {
+  background: linear-gradient(135deg, #355dff, #2846c7) !important;
+}
+
 @media (max-width: 640px) {
   .app {
     padding: 18px;

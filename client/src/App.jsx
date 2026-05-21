@@ -270,9 +270,13 @@ function App() {
       )}
 
       {isHost && game?.state === "LOBBY" && (
-        <div className="card slide-up">
-          <h3>تحكم المضيف</h3>
+        <div className="card host-controls slide-up">
+          <div className="host-controls-header">
+            <h3>لوحة تحكم المضيف</h3>
+            <span className="host-status">مضيف</span>
+          </div>
 
+          <label className="field-label">التصنيف</label>
           <select
             value={game?.category || "food"}
             onChange={e => changeCategory(e.target.value)}
@@ -285,10 +289,33 @@ function App() {
             ))}
           </select>
 
+          <label className="field-label">وقت السؤال</label>
+          <select
+            value={game?.timeLimit || 60}
+            onChange={e =>
+              socket.emit("host:settings", {
+                category: game?.category || "food",
+                timeLimit: Number(e.target.value)
+              })
+            }
+            className="input"
+          >
+            <option value={30}>30 ثانية</option>
+            <option value={45}>45 ثانية</option>
+            <option value={60}>60 ثانية</option>
+            <option value={90}>90 ثانية</option>
+            <option value={120}>120 ثانية</option>
+          </select>
+
+          <div className="host-info">
+            <span>اللاعبين: {playersCount}</span>
+            <span>الجاهزون: {lobbyReadyCount} / {playersCount}</span>
+          </div>
+
           <button
             onClick={startGame}
             disabled={!allPlayersReady}
-            className="button"
+            className="button start-button"
           >
             بدء اللعبة
           </button>

@@ -695,6 +695,57 @@ p {
   border: 1px solid rgba(255, 255, 255, .08);
 }
 
+.host-controls {
+  border-color: rgba(49, 93, 255, .22);
+}
+
+.host-controls-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.host-status {
+  background: rgba(255, 210, 87, .12);
+  color: #ffd257;
+  border: 1px solid rgba(255, 210, 87, .25);
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.field-label {
+  display: block;
+  margin: 14px 0 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.host-info {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+
+.host-info span {
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .08);
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: white;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.start-button {
+  width: 100%;
+  margin-top: 8px;
+}
+
 @media (max-width: 640px) {
   .app {
     padding: 18px;

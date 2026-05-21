@@ -18,6 +18,10 @@ function App() {
 
   const isHost = !!game?.hostId && game.hostId === socket.id;
   const playersCount = game?.players?.length || 0;
+  const lobbyReadyCount = game?.lobbyReady?.length || 0;
+  const isLobbyReady = game?.lobbyReady?.includes(socket.id);
+  const allPlayersReady = playersCount >= 3 && lobbyReadyCount === playersCount;
+
   const currentCategory =
     categories.find(cat => cat.id === game?.category) || categories[0];
 
@@ -49,6 +53,7 @@ function App() {
       if (!res.ok) {
         if (res.error === "NEED_3_PLAYERS") setError("لازم يكون عدد اللاعبين 3 أو أكثر");
         else if (res.error === "ONLY_HOST") setError("فقط المضيف يقدر يبدأ اللعبة");
+        else if (res.error === "PLAYERS_NOT_READY") setError("كل اللاعبين لازم يكونون جاهزين قبل بدء اللعبة");
         else setError("حدث خطأ أثناء بدء اللعبة");
       } else {
         setError("");
@@ -137,6 +142,10 @@ function App() {
       code: joinCode.trim().toUpperCase(),
       user: discordUser
     });
+  }
+
+  function toggleLobbyReady() {
+    socket.emit("lobby:ready");
   }
 
   function startGame() {
@@ -239,12 +248,30 @@ function App() {
           <span className="room-code">{game?.roomCode || "—"}</span>
         </p>
         <p>عدد اللاعبين: {playersCount}</p>
+        <p>الجاهزون: {lobbyReadyCount} / {playersCount}</p>
         <p>أنت: {isHost ? "المضيف" : "لاعب"}</p>
       </div>
 
+      {game?.state === "LOBBY" && (
+        <div className="card slide-up">
+          <h3>جاهزية اللاعبين</h3>
+
+          <button
+            className={isLobbyReady ? "button" : "button green"}
+            onClick={toggleLobbyReady}
+          >
+            {isLobbyReady ? "إلغاء الجاهزية" : "أنا جاهز"}
+          </button>
+
+          <p>
+            لازم كل اللاعبين يكونون جاهزين قبل بدء اللعبة.
+          </p>
+        </div>
+      )}
+
       {isHost && game?.state === "LOBBY" && (
         <div className="card slide-up">
-          <h3>اختيار التصنيف</h3>
+          <h3>تحكم المضيف</h3>
 
           <select
             value={game?.category || "food"}
@@ -260,14 +287,16 @@ function App() {
 
           <button
             onClick={startGame}
-            disabled={playersCount < 3}
+            disabled={!allPlayersReady}
             className="button"
           >
             بدء اللعبة
           </button>
 
-          {playersCount < 3 && (
-            <p className="error">تحتاج 3 لاعبين أو أكثر لبدء اللعبة</p>
+          {!allPlayersReady && (
+            <p className="error">
+              تحتاج 3 لاعبين أو أكثر، وكل اللاعبين لازم يكونون جاهزين.
+            </p>
           )}
         </div>
       )}
@@ -283,39 +312,49 @@ function App() {
       <h3 className="slide-up">اللاعبين</h3>
 
       <div className="players-grid">
-        {game?.players?.map(player => (
-          <div key={player.id} className="player-card scale-in">
-            <img
-              className="avatar"
-              src={
-                player.avatar
-                  ? `https://cdn.discordapp.com/avatars/${player.discordId}/${player.avatar}.png`
-                  : "https://cdn.discordapp.com/embed/avatars/0.png"
-              }
-              alt={player.name}
-            />
+        {game?.players?.map(player => {
+          const ready = game?.lobbyReady?.includes(player.id);
 
-            <span>{player.name}</span>
+          return (
+            <div key={player.id} className="player-card scale-in">
+              <img
+                className="avatar"
+                src={
+                  player.avatar
+                    ? `https://cdn.discordapp.com/avatars/${player.discordId}/${player.avatar}.png`
+                    : "https://cdn.discordapp.com/embed/avatars/0.png"
+                }
+                alt={player.name}
+              />
 
-            {player.id === game.hostId && (
-              <div className="host-badge">
-                <svg viewBox="0 0 24 24" fill="none" className="host-icon">
-                  <path
-                    d="M5 18L3 7L8 10L12 4L16 10L21 7L19 18H5Z"
-                    fill="currentColor"
-                  />
-                  <path
-                    d="M7 21H17"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span>مضيف</span>
-              </div>
-            )}
-          </div>
-        ))}
+              <span>{player.name}</span>
+
+              {game?.state === "LOBBY" && (
+                <div className={ready ? "ready-badge" : "not-ready-badge"}>
+                  {ready ? "جاهز" : "غير جاهز"}
+                </div>
+              )}
+
+              {player.id === game.hostId && (
+                <div className="host-badge">
+                  <svg viewBox="0 0 24 24" fill="none" className="host-icon">
+                    <path
+                      d="M5 18L3 7L8 10L12 4L16 10L21 7L19 18H5Z"
+                      fill="currentColor"
+                    />
+                    <path
+                      d="M7 21H17"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <span>مضيف</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {game?.state !== "LOBBY" && (

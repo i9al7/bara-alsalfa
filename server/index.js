@@ -223,6 +223,11 @@ io.on("connection", socket => {
         emitGame();
     });
 
+    socket.on("lobby:ready", () => {
+        manager.toggleLobbyReady(socket.id);
+        emitGame();
+    });
+
     socket.on("game:start", () => {
 
         const result =

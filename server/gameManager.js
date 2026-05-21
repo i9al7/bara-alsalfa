@@ -16,6 +16,8 @@ function createInitialGame(keepPlayers = []) {
 
         roomCode: null,
 
+        lobbyReady: [],
+
         questionQueue: [],
         currentTurnIndex: 0,
 
@@ -50,6 +52,25 @@ function generateRoomCode() {
 
 function getRoomCode() {
     return game.roomCode;
+}
+
+function toggleLobbyReady(playerId) {
+    if (game.state !== "LOBBY") {
+        return { ok: false, error: "INVALID_STATE" };
+    }
+
+    const exists = game.players.some(p => p.id === playerId);
+    if (!exists) {
+        return { ok: false, error: "PLAYER_NOT_FOUND" };
+    }
+
+    if (game.lobbyReady.includes(playerId)) {
+        game.lobbyReady = game.lobbyReady.filter(id => id !== playerId);
+    } else {
+        game.lobbyReady.push(playerId);
+    }
+
+    return { ok: true };
 }
 
 function getPlayer(socketId) {
@@ -227,6 +248,12 @@ function pickNextTurn() {
     game.turnStartedAt = Date.now();
 }
 
+const readyPlayers = game.lobbyReady.length;
+
+if (readyPlayers < 3 || readyPlayers !== game.players.length) {
+    return { ok: false, error: "PLAYERS_NOT_READY" };
+}
+
 function startGame(socketId) {
     if (socketId !== game.hostId) {
         return { ok: false, error: "ONLY_HOST" };
@@ -398,6 +425,8 @@ function spyGuess(playerId, guess) {
 function resetGame() {
     const players = game.players;
 
+    lobbyReady: [];
+
     game = createInitialGame(players);
     game.roomCode = generateRoomCode();
 
@@ -415,7 +444,7 @@ module.exports = {
     addPlayer,
     removePlayer,
     setSettings,
-
+    toggleLobbyReady,
     startGame,
     nextTurn,
     autoNextTurnIfNeeded,

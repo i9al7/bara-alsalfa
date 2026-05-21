@@ -11,7 +11,6 @@ function App() {
   const [joinCode, setJoinCode] = useState("");
   const [mode, setMode] = useState(null);
   const [categories, setCategories] = useState([]);
-
   const [loading, setLoading] = useState(true);
 
   const [tickSound] = useState(() => new Audio("/sounds/tick.mp3"));
@@ -31,12 +30,9 @@ function App() {
           name: value.name,
           words: value.words
         }));
-
         setCategories(formatted);
       })
-      .catch(() => {
-        setError("فشل تحميل التصنيفات");
-      });
+      .catch(() => setError("فشل تحميل التصنيفات"));
 
     socket.on("game:update", data => setGame(data));
 
@@ -46,22 +42,14 @@ function App() {
     });
 
     socket.on("lobby:error", err => {
-      if (err === "INVALID_CODE") {
-        setError("كود الروم غير صحيح");
-      } else {
-        setError("حدث خطأ أثناء دخول الروم");
-      }
+      setError(err === "INVALID_CODE" ? "كود الروم غير صحيح" : "حدث خطأ أثناء دخول الروم");
     });
 
     socket.on("game:startResult", res => {
       if (!res.ok) {
-        if (res.error === "NEED_3_PLAYERS") {
-          setError("لازم يكون عدد اللاعبين 3 أو أكثر");
-        } else if (res.error === "ONLY_HOST") {
-          setError("فقط المضيف يقدر يبدأ اللعبة");
-        } else {
-          setError("حدث خطأ أثناء بدء اللعبة");
-        }
+        if (res.error === "NEED_3_PLAYERS") setError("لازم يكون عدد اللاعبين 3 أو أكثر");
+        else if (res.error === "ONLY_HOST") setError("فقط المضيف يقدر يبدأ اللعبة");
+        else setError("حدث خطأ أثناء بدء اللعبة");
       } else {
         setError("");
       }
@@ -76,16 +64,15 @@ function App() {
         const user = await setupDiscordUser();
         const discordName = user.global_name || user.username || "Player";
 
-        setLoading(false);
-
         setDiscordUser({
           id: user.id,
           username: discordName,
           avatar: user.avatar
         });
       } catch {
-        setLoading(false);
         setError("افتح اللعبة من Discord Activity عشان يتم تسجيل دخولك تلقائيًا");
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -103,80 +90,48 @@ function App() {
   useEffect(() => {
     if (!game) return;
 
-    // وقف الأصوات إذا مو مرحلة الأسئلة
     if (game.state !== "QUESTIONING") {
       tickSound.pause();
       tickSound.currentTime = 0;
-
       return;
     }
 
-    // آخر 10 ثواني فقط
-    if (
-      game.timeLeft <= 10 &&
-      game.timeLeft > 0
-    ) {
-
-      // شغل الصوت فقط إذا مو شغال
+    if (game.timeLeft <= 10 && game.timeLeft > 0) {
       if (tickSound.paused) {
         tickSound.volume = 0.12;
-
         tickSound.play().catch(() => { });
       }
-
     } else {
-
-      // وقف الصوت إذا طلع من آخر 10 ثواني
       tickSound.pause();
       tickSound.currentTime = 0;
     }
 
-    // انتهاء الوقت
     if (game.timeLeft === 0) {
-
       tickSound.pause();
       tickSound.currentTime = 0;
-
       endSound.volume = 0.22;
-
       endSound.currentTime = 0;
-
       endSound.play().catch(() => { });
     }
-
-  }, [game?.timeLeft, game?.state]);
+  }, [game?.timeLeft, game?.state, tickSound, endSound]);
 
   useEffect(() => {
     return () => {
       tickSound.pause();
       tickSound.currentTime = 0;
-
       endSound.pause();
       endSound.currentTime = 0;
     };
-  }, []);
+  }, [tickSound, endSound]);
 
   function createLobby() {
-    if (!discordUser) {
-      setError("لم يتم تحميل حساب Discord بعد");
-      return;
-    }
-
-    socket.emit("lobby:create", {
-      user: discordUser
-    });
+    if (!discordUser) return setError("لم يتم تحميل حساب Discord بعد");
+    socket.emit("lobby:create", { user: discordUser });
   }
 
   function joinLobby() {
-    if (!discordUser) {
-      setError("لم يتم تحميل حساب Discord بعد");
-      return;
-    }
-
-    if (!joinCode.trim()) {
-      setError("اكتب كود الروم");
-      return;
-    }
+    if (!discordUser) return setError("لم يتم تحميل حساب Discord بعد");
+    if (!joinCode.trim()) return setError("اكتب كود الروم");
 
     socket.emit("lobby:join", {
       code: joinCode.trim().toUpperCase(),
@@ -198,8 +153,8 @@ function App() {
 
   if (loading) {
     return (
-      <div className="loading-screen">
-        <div className="loading-card">
+      <div className="loading-screen fade-in">
+        <div className="loading-card scale-in">
           <div className="loading-logo">
             <img src="/bara-alsalfa-logo.png" alt="برا السالفة" />
           </div>
@@ -212,14 +167,14 @@ function App() {
 
   if (!joined) {
     return (
-      <div className="center-screen">
-        <div className="auth-box">
+      <div className="center-screen fade-in">
+        <div className="auth-box scale-in">
           <h1 className="logo">برا السالفة</h1>
 
           {!discordUser && <p>جاري تحميل حساب Discord...</p>}
 
           {discordUser && !mode && (
-            <div className="row">
+            <div className="row slide-up">
               <button className="button" onClick={() => setMode("create")}>
                 إنشاء روم
               </button>
@@ -231,21 +186,23 @@ function App() {
           )}
 
           {mode === "create" && (
-            <>
+            <div className="slide-up">
               <p>سيتم إنشاء روم باسم: {discordUser?.username}</p>
 
-              <button className="button" onClick={createLobby}>
-                إنشاء الروم
-              </button>
+              <div className="row">
+                <button className="button" onClick={createLobby}>
+                  إنشاء الروم
+                </button>
 
-              <button className="button green" onClick={() => setMode(null)}>
-                رجوع
-              </button>
-            </>
+                <button className="button green" onClick={() => setMode(null)}>
+                  رجوع
+                </button>
+              </div>
+            </div>
           )}
 
           {mode === "join" && (
-            <>
+            <div className="slide-up">
               <input
                 className="input"
                 placeholder="كود الروم"
@@ -253,40 +210,40 @@ function App() {
                 onChange={e => setJoinCode(e.target.value)}
               />
 
-              <button className="button green" onClick={joinLobby}>
-                دخول
-              </button>
+              <div className="row">
+                <button className="button green" onClick={joinLobby}>
+                  دخول
+                </button>
 
-              <button className="button" onClick={() => setMode(null)}>
-                رجوع
-              </button>
-            </>
+                <button className="button" onClick={() => setMode(null)}>
+                  رجوع
+                </button>
+              </div>
+            </div>
           )}
 
-          {error && <p className="error">{error}</p>}
+          {error && <p className="error slide-up">{error}</p>}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="app">
-      <h1>برا السالفة</h1>
+    <div className="app fade-in">
+      <h1 className="slide-up">برا السالفة</h1>
 
-      <div className="card">
+      <div className="card slide-up">
         <h2>الحالة: {game?.state}</h2>
         <p>
           كود الروم:
-          <span className="room-code">
-            {game?.roomCode || "—"}
-          </span>
+          <span className="room-code">{game?.roomCode || "—"}</span>
         </p>
         <p>عدد اللاعبين: {playersCount}</p>
         <p>أنت: {isHost ? "المضيف" : "لاعب"}</p>
       </div>
 
       {isHost && game?.state === "LOBBY" && (
-        <div className="card">
+        <div className="card slide-up">
           <h3>اختيار التصنيف</h3>
 
           <select
@@ -316,18 +273,18 @@ function App() {
       )}
 
       {!isHost && game?.state === "LOBBY" && (
-        <div className="card">
+        <div className="card slide-up">
           <p>انتظر المضيف يختار التصنيف ويبدأ اللعبة</p>
         </div>
       )}
 
-      {error && <p className="error">{error}</p>}
+      {error && <p className="error slide-up">{error}</p>}
 
-      <h3>اللاعبين</h3>
+      <h3 className="slide-up">اللاعبين</h3>
 
       <div className="players-grid">
         {game?.players?.map(player => (
-          <div key={player.id} className="player-card">
+          <div key={player.id} className="player-card scale-in">
             <img
               className="avatar"
               src={
@@ -335,20 +292,18 @@ function App() {
                   ? `https://cdn.discordapp.com/avatars/${player.discordId}/${player.avatar}.png`
                   : "https://cdn.discordapp.com/embed/avatars/0.png"
               }
+              alt={player.name}
             />
-            {player.name}
+
+            <span>{player.name}</span>
+
             {player.id === game.hostId && (
               <div className="host-badge">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="host-icon"
-                >
+                <svg viewBox="0 0 24 24" fill="none" className="host-icon">
                   <path
                     d="M5 18L3 7L8 10L12 4L16 10L21 7L19 18H5Z"
                     fill="currentColor"
                   />
-
                   <path
                     d="M7 21H17"
                     stroke="currentColor"
@@ -356,7 +311,6 @@ function App() {
                     strokeLinecap="round"
                   />
                 </svg>
-
                 <span>مضيف</span>
               </div>
             )}
@@ -367,18 +321,18 @@ function App() {
       {game?.state !== "LOBBY" && (
         <>
           {game?.state === "QUESTIONING" && (
-            <div className="card">
+            <div className="card slide-up">
               <h2>مرحلة الأسئلة</h2>
 
               <div className="question-turn">
-                <div className="turn-player asker">
+                <div className="turn-player asker scale-in">
                   <span className="turn-label">السائل</span>
                   <strong>{game.currentAsker?.name}</strong>
                 </div>
 
                 <div className="turn-arrow">يسأل</div>
 
-                <div className="turn-player target">
+                <div className="turn-player target scale-in">
                   <span className="turn-label">المجيب</span>
                   <strong>{game.currentTarget?.name}</strong>
                 </div>
@@ -386,35 +340,26 @@ function App() {
 
               <div className="progress">
                 <div
-                  className={`progress-bar ${game.timeLeft <= 10 ? "danger-bar" : ""
-                    }`}
+                  key={game.currentTurnIndex}
+                  className={`progress-bar ${game.timeLeft <= 10 ? "danger-bar" : ""}`}
                   style={{
                     width: `${(game.timeLeft / game.timeLimit) * 100}%`
                   }}
                 />
               </div>
 
-              <div
-                className={`timer-text ${game.timeLeft <= 10 ? "timer-danger" : ""
-                  }`}
-              >
+              <div className={`timer-text ${game.timeLeft <= 10 ? "timer-danger" : ""}`}>
                 {game.timeLeft}s
               </div>
 
               <div className="row">
                 {isHost && (
-                  <button
-                    onClick={() => socket.emit("turn:next")}
-                    className="button"
-                  >
+                  <button onClick={() => socket.emit("turn:next")} className="button">
                     التالي
                   </button>
                 )}
 
-                <button
-                  onClick={() => socket.emit("vote:ready")}
-                  className="button green"
-                >
+                <button onClick={() => socket.emit("vote:ready")} className="button green">
                   جاهز للتصويت
                 </button>
               </div>
@@ -422,21 +367,18 @@ function App() {
           )}
 
           {game?.state === "READY_TO_VOTE" && (
-            <div className="card">
+            <div className="card scale-in">
               <h2>بانتظار جميع اللاعبين...</h2>
               <p>جاهزين: {game.ready.length} / {game.players.length}</p>
 
-              <button
-                onClick={() => socket.emit("vote:ready")}
-                className="button green"
-              >
+              <button onClick={() => socket.emit("vote:ready")} className="button green">
                 أنا جاهز للتصويت
               </button>
             </div>
           )}
 
           {game?.state === "VOTING" && (
-            <div className="card">
+            <div className="card scale-in">
               <h2>التصويت</h2>
               <p>من هو برا السالفة؟</p>
 
@@ -454,7 +396,7 @@ function App() {
           )}
 
           {game?.state === "SPY_GUESS" && game?.myRole === "SPY" && (
-            <div className="card">
+            <div className="card scale-in">
               <h2>تم كشفك!</h2>
               <p>اختر الكلمة الصحيحة:</p>
 
@@ -472,28 +414,23 @@ function App() {
           )}
 
           {game?.state === "SPY_GUESS" && game?.myRole !== "SPY" && (
-            <div className="card">
+            <div className="card scale-in">
               <h2>تم كشف الجاسوس</h2>
               <p>ننتظر الجاسوس يحاول يخمن الكلمة...</p>
             </div>
           )}
 
           {game?.state === "RESULTS" && (
-            <div className="card">
+            <div className="card scale-in">
               <h2>النتيجة</h2>
 
               {game.result === "SPY_WINS" ? (
                 <h3 className="result-title spy-win">
-                  <svg
-                    className="result-icon"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
+                  <svg className="result-icon" viewBox="0 0 24 24" fill="none">
                     <path
                       d="M12 3L4 7V12C4 17 7.5 21 12 22C16.5 21 20 17 20 12V7L12 3Z"
                       fill="currentColor"
                     />
-
                     <path
                       d="M9 12L11 14L15 10"
                       stroke="white"
@@ -502,69 +439,43 @@ function App() {
                       strokeLinejoin="round"
                     />
                   </svg>
-
                   <span>الجاسوس فاز</span>
                 </h3>
               ) : game.result === "DRAW" ? (
-
                 <h3 className="result-title draw-result">
-                  <svg
-                    className="result-icon"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
+                  <svg className="result-icon" viewBox="0 0 24 24" fill="none">
                     <path
                       d="M8 12H16"
                       stroke="currentColor"
                       strokeWidth="2.4"
                       strokeLinecap="round"
                     />
-
                     <path
                       d="M12 8V16"
                       stroke="currentColor"
                       strokeWidth="2.4"
                       strokeLinecap="round"
                     />
-
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="9"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
                   </svg>
-
                   <span>تعادل</span>
                 </h3>
-
               ) : (
-
                 <h3 className="result-title players-win">
-                  <svg
-                    className="result-icon"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
+                  <svg className="result-icon" viewBox="0 0 24 24" fill="none">
                     <path
                       d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z"
                       fill="currentColor"
                     />
                   </svg>
-
                   <span>اللاعبون فازوا</span>
                 </h3>
-
               )}
 
               <p>الكلمة كانت: {game.word}</p>
 
               {isHost && (
-                <button
-                  onClick={() => socket.emit("game:reset")}
-                  className="button"
-                >
+                <button onClick={() => socket.emit("game:reset")} className="button">
                   جولة جديدة
                 </button>
               )}
@@ -572,17 +483,12 @@ function App() {
           )}
 
           {game?.myRole === "SPY" ? (
-            <div className="role-box spy">
-              <svg
-                className="spy-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
+            <div className="role-box spy reveal-pop">
+              <svg className="spy-icon" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M12 3L4 7V12C4 17 7.5 21 12 22C16.5 21 20 17 20 12V7L12 3Z"
                   fill="currentColor"
                 />
-
                 <path
                   d="M9 12L11 14L15 10"
                   stroke="white"
@@ -595,7 +501,9 @@ function App() {
               <span>أنت برا السالفة</span>
             </div>
           ) : game?.myWord ? (
-            <div className="role-box word">الكلمة: {game.myWord}</div>
+            <div className="role-box word reveal-pop">
+              الكلمة: {game.myWord}
+            </div>
           ) : null}
         </>
       )}

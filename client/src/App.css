@@ -600,6 +600,80 @@ p {
   }
 }
 
+.fade-in {
+  animation: fade-in .28s ease both;
+}
+
+.slide-up {
+  animation: slide-up .32s ease both;
+}
+
+.scale-in {
+  animation: scale-in .26s ease both;
+}
+
+.card {
+  animation: slide-up .28s ease both;
+}
+
+.player-card {
+  animation: scale-in .22s ease both;
+}
+
+.role-box {
+  animation: reveal-pop .35s ease both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes reveal-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(.94);
+  }
+
+  60% {
+    transform: translateY(-4px) scale(1.03);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 @media (max-width: 640px) {
   .app {
     padding: 18px;

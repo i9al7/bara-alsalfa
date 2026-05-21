@@ -200,8 +200,9 @@ function App() {
     return (
       <div className="loading-screen">
         <div className="loading-card">
-          <div className="loading-logo">BA</div>
-          <h1>برا السالفة</h1>
+          <div className="loading-logo">
+            <img src="/logo.png" alt="برا السالفة" />
+          </div>
           <p>جاري تحميل اللعبة...</p>
           <div className="loading-spinner" />
         </div>

@@ -337,6 +337,77 @@ p {
   height: 14px;
 }
 
+.loading-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at top, rgba(88, 101, 242, .22), transparent 40%),
+    radial-gradient(circle at bottom right, rgba(237, 66, 69, .14), transparent 35%),
+    var(--bg);
+}
+
+.loading-card {
+  width: min(420px, calc(100% - 32px));
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  padding: 34px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+  animation: loading-pop .45s ease both;
+}
+
+.loading-logo {
+  width: 86px;
+  height: 86px;
+  margin: 0 auto 18px;
+  border-radius: 26px;
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+  font-weight: 950;
+  background: linear-gradient(135deg, var(--primary), var(--danger));
+  box-shadow: 0 0 35px rgba(88, 101, 242, .35);
+}
+
+.loading-card h1 {
+  margin: 0 0 8px;
+}
+
+.loading-card p {
+  margin-bottom: 20px;
+}
+
+.loading-spinner {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, .12);
+  border-top-color: var(--primary);
+  animation: spin .8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loading-pop {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .timer-text {
   margin-top: 12px;
   font-size: 34px;

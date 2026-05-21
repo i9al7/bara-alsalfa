@@ -12,6 +12,8 @@ function App() {
   const [mode, setMode] = useState(null);
   const [categories, setCategories] = useState([]);
 
+  const [loading, setLoading] = useState(true);
+
   const [tickSound] = useState(() => new Audio("/sounds/tick.mp3"));
   const [endSound] = useState(() => new Audio("/sounds/end.mp3"));
 
@@ -56,7 +58,7 @@ function App() {
         if (res.error === "NEED_3_PLAYERS") {
           setError("لازم يكون عدد اللاعبين 3 أو أكثر");
         } else if (res.error === "ONLY_HOST") {
-          setError("فقط الهوست يقدر يبدأ اللعبة");
+          setError("فقط المضيف يقدر يبدأ اللعبة");
         } else {
           setError("حدث خطأ أثناء بدء اللعبة");
         }
@@ -74,12 +76,15 @@ function App() {
         const user = await setupDiscordUser();
         const discordName = user.global_name || user.username || "Player";
 
+        setLoading(false);
+
         setDiscordUser({
           id: user.id,
           username: discordName,
           avatar: user.avatar
         });
       } catch {
+        setLoading(false);
         setError("افتح اللعبة من Discord Activity عشان يتم تسجيل دخولك تلقائيًا");
       }
     }
@@ -191,6 +196,19 @@ function App() {
     });
   }
 
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-card">
+          <div className="loading-logo">BA</div>
+          <h1>برا السالفة</h1>
+          <p>جاري تحميل اللعبة...</p>
+          <div className="loading-spinner" />
+        </div>
+      </div>
+    );
+  }
+
   if (!joined) {
     return (
       <div className="center-screen">
@@ -263,7 +281,7 @@ function App() {
           </span>
         </p>
         <p>عدد اللاعبين: {playersCount}</p>
-        <p>أنت: {isHost ? "الهوست" : "لاعب"}</p>
+        <p>أنت: {isHost ? "المضيف" : "لاعب"}</p>
       </div>
 
       {isHost && game?.state === "LOBBY" && (
@@ -298,7 +316,7 @@ function App() {
 
       {!isHost && game?.state === "LOBBY" && (
         <div className="card">
-          <p>انتظر الهوست يختار التصنيف ويبدأ اللعبة</p>
+          <p>انتظر المضيف يختار التصنيف ويبدأ اللعبة</p>
         </div>
       )}
 
@@ -338,7 +356,7 @@ function App() {
                   />
                 </svg>
 
-                <span>هوست</span>
+                <span>مضيف</span>
               </div>
             )}
           </div>

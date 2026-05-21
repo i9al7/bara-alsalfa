@@ -38,7 +38,7 @@ export const translations = {
     },
 
     en: {
-        title: "Out of Topic",
+        title: "bara alsalfa",
 
         createRoom: "Create Room",
         joinRoom: "Join by Code",
@@ -64,7 +64,7 @@ export const translations = {
         questioning: "Questioning Phase",
         voting: "Voting",
 
-        whoIsSpy: "Who is out of topic?",
+        whoIsSpy: "Who is bara alsalfa?",
 
         results: "Results",
 

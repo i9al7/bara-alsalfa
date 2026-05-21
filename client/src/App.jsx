@@ -201,7 +201,7 @@ function App() {
       <div className="loading-screen">
         <div className="loading-card">
           <div className="loading-logo">
-            <img src="/logo.png" alt="برا السالفة" />
+            <img src="/bara-alsalfa-logo.png" alt="برا السالفة" />
           </div>
           <p>جاري تحميل اللعبة...</p>
           <div className="loading-spinner" />

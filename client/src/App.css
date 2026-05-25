@@ -136,6 +136,13 @@ p {
   z-index: 1;
 }
 
+.card>*,
+.auth-box>*,
+.loading-card>* {
+  position: relative;
+  z-index: 1;
+}
+
 .input {
   width: 100%;
   padding: 15px 16px;

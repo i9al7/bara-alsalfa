@@ -254,12 +254,24 @@ const allPlayersReady =
         <h1 className="slide-up">{t.title}</h1>
   
         <div className="card slide-up">
-          <h2>{t.status}: {game?.state}</h2>
-          <p>{t.roomCode}: <span className="room-code">{game?.roomCode || "—"}</span></p>
-          <p>{t.players}: {playersCount}</p>
-          <p>{t.readyPlayers}: {lobbyReadyCount} / {playersCount}</p>
-          <p>{t.youAre}: {isHost ? t.host : t.player}</p>
-        </div>
+  <h2>{t.status}: {game?.state}</h2>
+
+  <p>
+    {t.roomCode}:
+    <span className="room-code">{game?.roomCode || "—"}</span>
+  </p>
+
+  <p>
+    {t.category}:
+    <span className="category-badge">
+      {currentCategory?.name?.[lang] || currentCategory?.name || "—"}
+    </span>
+  </p>
+
+  <p>{t.players}: {playersCount}</p>
+  <p>{t.readyPlayers}: {lobbyReadyCount} / {playersCount}</p>
+  <p>{t.youAre}: {isHost ? t.host : t.player}</p>
+</div>
   
         {game?.state === "LOBBY" && (
           <div className="card slide-up">

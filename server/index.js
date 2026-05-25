@@ -16,9 +16,7 @@ app.use(express.json());
 const server = http.createServer(app);
 
 const io = new Server(server, {
-    cors: {
-        origin: "*"
-    }
+    cors: { origin: "*" }
 });
 
 app.post("/api/discord/token", async (req, res) => {
@@ -26,28 +24,21 @@ app.post("/api/discord/token", async (req, res) => {
         const { code } = req.body;
 
         if (!code) {
-            return res.status(400).json({
-                error: "Missing code"
-            });
+            return res.status(400).json({ error: "Missing code" });
         }
 
-        const tokenRes = await fetch(
-            "https://discord.com/api/oauth2/token",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type":
-                        "application/x-www-form-urlencoded"
-                },
-                body: new URLSearchParams({
-                    client_id: process.env.DISCORD_CLIENT_ID,
-                    client_secret:
-                        process.env.DISCORD_CLIENT_SECRET,
-                    grant_type: "authorization_code",
-                    code
-                })
-            }
-        );
+        const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({
+                client_id: process.env.DISCORD_CLIENT_ID,
+                client_secret: process.env.DISCORD_CLIENT_SECRET,
+                grant_type: "authorization_code",
+                code
+            })
+        });
 
         const tokenData = await tokenRes.json();
 
@@ -55,14 +46,11 @@ app.post("/api/discord/token", async (req, res) => {
             return res.status(400).json(tokenData);
         }
 
-        const userRes = await fetch(
-            "https://discord.com/api/users/@me",
-            {
-                headers: {
-                    Authorization: `Bearer ${tokenData.access_token}`
-                }
+        const userRes = await fetch("https://discord.com/api/users/@me", {
+            headers: {
+                Authorization: `Bearer ${tokenData.access_token}`
             }
-        );
+        });
 
         const user = await userRes.json();
 
@@ -70,13 +58,9 @@ app.post("/api/discord/token", async (req, res) => {
             user,
             access_token: tokenData.access_token
         });
-
     } catch (err) {
         console.error("Discord auth error:", err);
-
-        res.status(500).json({
-            error: "Discord auth failed"
-        });
+        res.status(500).json({ error: "Discord auth failed" });
     }
 });
 
@@ -84,226 +68,194 @@ app.get("/api/categories", (req, res) => {
     res.json(manager.categories);
 });
 
-app.use(
-    express.static(
-        path.join(__dirname, "../client/dist")
-    )
-);
+app.use(express.static(path.join(__dirname, "../client/dist")));
 
 app.use((req, res) => {
-    res.sendFile(
-        path.join(
-            __dirname,
-            "../client/dist/index.html"
-        )
-    );
+    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
 });
 
-function emitGame() {
-    for (const socket of io.sockets.sockets.values()) {
-        socket.emit(
+function emitRoom(roomCode) {
+    if (!roomCode) return;
+
+    const players = manager.getPlayers(roomCode);
+
+    for (const player of players) {
+        io.to(player.id).emit(
             "game:update",
-            manager.privateGameFor(socket.id)
+            manager.privateGameFor(roomCode, player.id)
         );
     }
 }
 
+function emitSocket(socketId) {
+    const roomCode = manager.getSocketRoom(socketId);
+    if (!roomCode) return;
+
+    io.to(socketId).emit(
+        "game:update",
+        manager.privateGameFor(roomCode, socketId)
+    );
+}
+
 setInterval(() => {
-    manager.autoNextTurnIfNeeded();
-    emitGame();
+    const updatedRooms = manager.autoNextTurnAllRooms();
+
+    for (const roomCode of updatedRooms) {
+        emitRoom(roomCode);
+    }
 }, 1000);
 
 io.on("connection", socket => {
-
     console.log("Player connected:", socket.id);
 
     socket.on("lobby:create", ({ user }) => {
-
         try {
-
             if (!user) {
-                socket.emit(
-                    "lobby:error",
-                    "INVALID_USER"
-                );
+                socket.emit("lobby:error", "INVALID_USER");
                 return;
             }
 
-            manager.createLobby(socket.id);
-
-            manager.addPlayer(socket.id, {
+            const result = manager.createLobby(socket.id, {
                 id: user.id,
                 username: user.username,
                 avatar: user.avatar
             });
 
+            if (!result.ok) {
+                socket.emit("lobby:error", result.error || "CREATE_FAILED");
+                return;
+            }
+
+            socket.join(result.roomCode);
             socket.emit("lobby:joined");
 
-            emitGame();
+            emitRoom(result.roomCode);
 
-            console.log(
-                "Lobby created by:",
-                user.username
-            );
-
+            console.log(`${user.username} created room ${result.roomCode}`);
         } catch (err) {
-
             console.error(err);
-
-            socket.emit(
-                "lobby:error",
-                "CREATE_FAILED"
-            );
+            socket.emit("lobby:error", "CREATE_FAILED");
         }
     });
 
     socket.on("lobby:join", ({ code, user }) => {
-
         try {
-
             if (!user) {
-                socket.emit(
-                    "lobby:error",
-                    "INVALID_USER"
-                );
+                socket.emit("lobby:error", "INVALID_USER");
                 return;
             }
 
             if (!code) {
-                socket.emit(
-                    "lobby:error",
-                    "INVALID_CODE"
-                );
+                socket.emit("lobby:error", "INVALID_CODE");
                 return;
             }
 
-            if (
-                manager.getRoomCode() !==
-                code.toUpperCase()
-            ) {
-                socket.emit(
-                    "lobby:error",
-                    "INVALID_CODE"
-                );
-                return;
-            }
+            const roomCode = code.toUpperCase();
 
-            manager.addPlayer(socket.id, {
+            const result = manager.joinLobby(roomCode, socket.id, {
                 id: user.id,
                 username: user.username,
                 avatar: user.avatar
             });
 
+            if (!result.ok) {
+                socket.emit("lobby:error", result.error || "JOIN_FAILED");
+                return;
+            }
+
+            socket.join(roomCode);
             socket.emit("lobby:joined");
 
-            emitGame();
+            emitRoom(roomCode);
 
-            console.log(
-                `${user.username} joined room ${code}`
-            );
-
+            console.log(`${user.username} joined room ${roomCode}`);
         } catch (err) {
-
             console.error(err);
-
-            socket.emit(
-                "lobby:error",
-                "JOIN_FAILED"
-            );
+            socket.emit("lobby:error", "JOIN_FAILED");
         }
     });
 
     socket.on("host:settings", settings => {
+        const roomCode = manager.getSocketRoom(socket.id);
+        if (!roomCode) return;
 
-        manager.setSettings(
-            socket.id,
-            settings
-        );
-
-        emitGame();
+        manager.setSettings(roomCode, socket.id, settings);
+        emitRoom(roomCode);
     });
 
     socket.on("lobby:ready", () => {
-        manager.toggleLobbyReady(socket.id);
-        emitGame();
+        const roomCode = manager.getSocketRoom(socket.id);
+        if (!roomCode) return;
+
+        manager.toggleLobbyReady(roomCode, socket.id);
+        emitRoom(roomCode);
     });
 
     socket.on("game:start", () => {
+        const roomCode = manager.getSocketRoom(socket.id);
+        if (!roomCode) return;
 
-        const result =
-            manager.startGame(socket.id);
+        const result = manager.startGame(roomCode, socket.id);
 
-        socket.emit(
-            "game:startResult",
-            result
-        );
-
-        emitGame();
+        socket.emit("game:startResult", result);
+        emitRoom(roomCode);
     });
 
     socket.on("turn:next", () => {
+        const roomCode = manager.getSocketRoom(socket.id);
+        if (!roomCode) return;
 
-        manager.nextTurn(socket.id);
-
-        emitGame();
+        manager.nextTurn(roomCode, socket.id);
+        emitRoom(roomCode);
     });
 
     socket.on("vote:ready", () => {
+        const roomCode = manager.getSocketRoom(socket.id);
+        if (!roomCode) return;
 
-        manager.readyToVote(socket.id);
-
-        emitGame();
+        manager.readyToVote(roomCode, socket.id);
+        emitRoom(roomCode);
     });
 
     socket.on("vote:cast", targetId => {
+        const roomCode = manager.getSocketRoom(socket.id);
+        if (!roomCode) return;
 
-        manager.vote(
-            socket.id,
-            targetId
-        );
-
-        emitGame();
+        manager.vote(roomCode, socket.id, targetId);
+        emitRoom(roomCode);
     });
 
     socket.on("spy:guess", guess => {
+        const roomCode = manager.getSocketRoom(socket.id);
+        if (!roomCode) return;
 
-        manager.spyGuess(
-            socket.id,
-            guess
-        );
-
-        emitGame();
+        manager.spyGuess(roomCode, socket.id, guess);
+        emitRoom(roomCode);
     });
 
     socket.on("game:reset", () => {
+        const roomCode = manager.getSocketRoom(socket.id);
+        if (!roomCode) return;
 
-        manager.resetGame();
-
-        emitGame();
+        manager.resetGame(roomCode, socket.id);
+        emitRoom(roomCode);
     });
 
     socket.on("disconnect", () => {
+        console.log("Player disconnected:", socket.id);
 
-        console.log(
-            "Player disconnected:",
-            socket.id
-        );
+        const roomCode = manager.getSocketRoom(socket.id);
 
         manager.removePlayer(socket.id);
 
-        emitGame();
+        if (roomCode) {
+            emitRoom(roomCode);
+        }
     });
 });
 
-const PORT =
-    process.env.PORT || 3001;
+const PORT = process.env.PORT || 3001;
 
-server.listen(
-    PORT,
-    "0.0.0.0",
-    () => {
-        console.log(
-            `Server running on ${PORT}`
-        );
-    }
-);
+server.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on ${PORT}`);
+});

@@ -5,7 +5,8 @@ const DEFAULT_TIME_LIMIT = 60;
 const DEFAULT_LANG = "ar";
 const MIN_PLAYERS = 3;
 
-let game = createInitialGame();
+const rooms = new Map();
+const socketRooms = new Map();
 
 function createInitialGame(keepPlayers = []) {
     return {

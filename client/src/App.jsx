@@ -24,7 +24,12 @@ function App() {
   const playersCount = game?.players?.length || 0;
   const lobbyReadyCount = game?.lobbyReady?.length || 0;
   const isLobbyReady = game?.lobbyReady?.includes(socket.id);
-  const allPlayersReady = playersCount >= 3 && lobbyReadyCount === playersCount;
+  const MIN_PLAYERS = 3;
+
+  const allPlayersReady =
+    playersCount >= MIN_PLAYERS &&
+    lobbyReadyCount === playersCount;
+  //const allPlayersReady = playersCount >= 3 && lobbyReadyCount === playersCount;
   const currentCategory = categories.find(cat => cat.id === game?.category) || categories[0];
 
   useEffect(() => {
@@ -90,7 +95,7 @@ function App() {
       socket.off("game:startResult");
       socket.off("connect_error");
     };
-  }, [lang]);
+  }, []);
 
   useEffect(() => {
     if (!game) return;
@@ -161,6 +166,18 @@ function App() {
     });
   }
 
+  function changeLang(nextLang) {
+    setLang(nextLang);
+
+    if (isHost && game?.state === "LOBBY") {
+      socket.emit("host:settings", {
+        category: game?.category || "food",
+        lang: nextLang,
+        timeLimit: game?.timeLimit || 60
+      });
+    }
+  }
+
   if (loading) {
     return (
       <div className="loading-screen fade-in" dir={lang === "ar" ? "rtl" : "ltr"}>
@@ -180,8 +197,8 @@ function App() {
       <div className="center-screen fade-in" dir={lang === "ar" ? "rtl" : "ltr"}>
         <div className="auth-box scale-in">
           <div className="lang-switch">
-            <button className={lang === "ar" ? "active-lang" : ""} onClick={() => setLang("ar")}>عربي</button>
-            <button className={lang === "en" ? "active-lang" : ""} onClick={() => setLang("en")}>English</button>
+            <button className={lang === "ar" ? "active-lang" : ""} onClick={() => changeLang("ar")}>عربي</button>
+            <button className={lang === "en" ? "active-lang" : ""} onClick={() => changeLang("en")}>English</button>
           </div>
 
           <h1 className="logo">{t.title}</h1>
@@ -238,7 +255,19 @@ function App() {
 
       <div className="card slide-up">
         <h2>{t.status}: {game?.state}</h2>
-        <p>{t.roomCode}: <span className="room-code">{game?.roomCode || "—"}</span></p>
+
+        <p>
+          {t.roomCode}:
+          <span className="room-code">{game?.roomCode || "—"}</span>
+        </p>
+
+        <p>
+          {t.category}:
+          <span className="category-badge">
+            {currentCategory?.name?.[lang] || currentCategory?.name || "—"}
+          </span>
+        </p>
+
         <p>{t.players}: {playersCount}</p>
         <p>{t.readyPlayers}: {lobbyReadyCount} / {playersCount}</p>
         <p>{t.youAre}: {isHost ? t.host : t.player}</p>
@@ -269,10 +298,13 @@ function App() {
           <label className="field-label">{t.questionTime}</label>
           <select
             value={game?.timeLimit || 60}
-            onChange={e => socket.emit("host:settings", {
-              category: game?.category || "food",
-              timeLimit: Number(e.target.value)
-            })}
+            onChange={e =>
+              socket.emit("host:settings", {
+                category: game?.category || "food",
+                lang,
+                timeLimit: Number(e.target.value)
+              })
+            }
             className="input"
           >
             {[30, 45, 60, 90, 120].map(sec => (
@@ -403,7 +435,7 @@ function App() {
               <h2>{t.youWereCaught}</h2>
               <p>{t.chooseWord}</p>
 
-              {currentCategory?.words?.map(word => (
+              {(currentCategory?.words?.[lang] || currentCategory?.words || []).map(word => (
                 <button
                   key={word}
                   onClick={() => socket.emit("spy:guess", word)}

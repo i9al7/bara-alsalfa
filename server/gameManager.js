@@ -103,6 +103,30 @@ function createLobby(hostId) {
     return { ok: true, roomCode: game.roomCode };
 }
 
+function getSocketRoom(socketId) {
+    return game.players.some(player => player.id === socketId)
+        ? game.roomCode
+        : null;
+}
+
+function getPlayers(roomCode) {
+    if (roomCode !== game.roomCode) return [];
+    return game.players;
+}
+
+function joinLobby(roomCode, socketId, user) {
+    if (!game.roomCode || game.roomCode !== roomCode) {
+        return { ok: false, error: "INVALID_CODE" };
+    }
+
+    return addPlayer(socketId, user);
+}
+
+function autoNextTurnAllRooms() {
+    const changed = autoNextTurnIfNeeded();
+    return changed && game.roomCode ? [game.roomCode] : [];
+}
+
 function addPlayer(socketId, user) {
     if (!user) return { ok: false, error: "INVALID_USER" };
 
@@ -404,6 +428,9 @@ module.exports = {
 
     createLobby,
     getRoomCode,
+    getSocketRoom,
+    getPlayers,
+    joinLobby,
 
     addPlayer,
     removePlayer,
@@ -413,6 +440,7 @@ module.exports = {
     startGame,
     nextTurn,
     autoNextTurnIfNeeded,
+    autoNextTurnAllRooms,
 
     readyToVote,
     vote,

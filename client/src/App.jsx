@@ -159,12 +159,12 @@ const allPlayersReady =
     }
   
     function changeCategory(category) {
-      socket.emit("host:settings", {
-        category: game?.category || "food",
-        lang,
-        timeLimit: Number(e.target.value)
-      });
-    }
+  socket.emit("host:settings", {
+    category,
+    lang,
+    timeLimit: game?.timeLimit || 60
+  });
+}
     
     function changeLang(nextLang) {
   setLang(nextLang);
@@ -297,13 +297,16 @@ const allPlayersReady =
   
             <label className="field-label">{t.questionTime}</label>
             <select
-              value={game?.timeLimit || 60}
-              onChange={e => socket.emit("host:settings", {
-                category: game?.category || "food",
-                timeLimit: Number(e.target.value)
-              })}
-              className="input"
-            >
+  value={game?.timeLimit || 60}
+  onChange={e =>
+    socket.emit("host:settings", {
+      category: game?.category || "food",
+      lang,
+      timeLimit: Number(e.target.value)
+    })
+  }
+  className="input"
+>
               {[30, 45, 60, 90, 120].map(sec => (
                 <option key={sec} value={sec}>{sec} {t.seconds}</option>
               ))}

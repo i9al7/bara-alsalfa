@@ -398,15 +398,16 @@ function autoNextTurnIfNeeded(roomCode) {
 }
 
 function autoNextTurnAllRooms() {
-    const changedRooms = [];
+    const activeRooms = [];
 
-    for (const roomCode of rooms.keys()) {
-        if (autoNextTurnIfNeeded(roomCode)) {
-            changedRooms.push(roomCode);
+    for (const [roomCode, game] of rooms.entries()) {
+        if (game.state === "QUESTIONING") {
+            autoNextTurnIfNeeded(roomCode);
+            activeRooms.push(roomCode);
         }
     }
 
-    return changedRooms;
+    return activeRooms;
 }
 
 function readyToVote(roomCode, playerId) {

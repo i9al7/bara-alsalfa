@@ -98,9 +98,9 @@ function emitSocket(socketId) {
 }
 
 setInterval(() => {
-    const updatedRooms = manager.autoNextTurnAllRooms();
+    const activeRooms = manager.autoNextTurnAllRooms();
 
-    for (const roomCode of updatedRooms) {
+    for (const roomCode of activeRooms) {
         emitRoom(roomCode);
     }
 }, 1000);

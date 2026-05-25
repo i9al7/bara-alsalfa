@@ -251,8 +251,13 @@ function App() {
   return (
     <div className="app fade-in" dir={lang === "ar" ? "rtl" : "ltr"}>
       <div className="lang-switch">
-        <button className={lang === "ar" ? "active-lang" : ""} onClick={() => setLang("ar")}>عربي</button>
-        <button className={lang === "en" ? "active-lang" : ""} onClick={() => setLang("en")}>English</button>
+        <button className={lang === "ar" ? "active-lang" : ""} onClick={() => changeLang("ar")}>
+          عربي
+        </button>
+
+        <button className={lang === "en" ? "active-lang" : ""} onClick={() => changeLang("en")}>
+          English
+        </button>
       </div>
 
       <h1 className="slide-up">{t.title}</h1>
@@ -363,38 +368,6 @@ function App() {
       )}
 
       {error && <p className="error slide-up">{error}</p>}
-
-      <h3 className="slide-up">{t.playersList}</h3>
-
-      <div className="players-grid">
-        {game?.players?.map(player => {
-          const ready = game?.lobbyReady?.includes(player.id);
-
-          return (
-            <div key={player.id} className="player-card scale-in">
-              <img
-                className="avatar"
-                src={player.avatar ? `https://cdn.discordapp.com/avatars/${player.discordId}/${player.avatar}.png` : "https://cdn.discordapp.com/embed/avatars/0.png"}
-                alt={player.name}
-              />
-
-              <span>{player.name}</span>
-
-              {game?.state === "LOBBY" && (
-                <div className={ready ? "ready-badge" : "not-ready-badge"}>
-                  {ready ? t.ready : t.notReady}
-                </div>
-              )}
-
-              {player.id === game.hostId && (
-                <div className="host-badge">
-                  <span>{t.host}</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
 
       {game?.state !== "LOBBY" && (
         <>
@@ -519,6 +492,39 @@ function App() {
           ) : null}
         </>
       )}
+
+      <h3 className="slide-up">{t.playersList}</h3>
+
+      <div className="players-grid">
+        {game?.players?.map(player => {
+          const ready = game?.lobbyReady?.includes(player.id);
+
+          return (
+            <div key={player.id} className="player-card scale-in">
+              <img
+                className="avatar"
+                src={player.avatar ? `https://cdn.discordapp.com/avatars/${player.discordId}/${player.avatar}.png` : "https://cdn.discordapp.com/embed/avatars/0.png"}
+                alt={player.name}
+              />
+
+              <span>{player.name}</span>
+
+              {game?.state === "LOBBY" && (
+                <div className={ready ? "ready-badge" : "not-ready-badge"}>
+                  {ready ? t.ready : t.notReady}
+                </div>
+              )}
+
+              {player.id === game.hostId && (
+                <div className="host-badge">
+                  <span>{t.host}</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
     </div>
   );
 }

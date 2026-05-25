@@ -42,7 +42,7 @@ export const translations = {
     questionTime: "وقت السؤال",
     seconds: "ثانية",
     startGame: "بدء اللعبة",
-    needReadyAll: "تحتاج 1 لاعب أو أكثر، وكل اللاعبين لازم يكونون جاهزين.",
+    needReadyAll: "تحتاج 3 لاعب أو أكثر، وكل اللاعبين لازم يكونون جاهزين.",
     waitingHost: "انتظر المضيف يختار التصنيف ويبدأ اللعبة",
 
     playersList: "اللاعبين",
@@ -118,7 +118,7 @@ export const translations = {
     questionTime: "Question Time",
     seconds: "seconds",
     startGame: "Start Game",
-    needReadyAll: "You need 1+ player and everyone must be ready.",
+    needReadyAll: "You need 3+ player and everyone must be ready.",
     waitingHost: "Waiting for the host to choose a category and start the game",
 
     playersList: "Players",

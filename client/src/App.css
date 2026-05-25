@@ -772,6 +772,17 @@ p {
   background: linear-gradient(135deg, #355dff, #2846c7) !important;
 }
 
+.category-badge {
+  display: inline-block;
+  margin-inline-start: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(255, 210, 87, .12);
+  color: #ffd257;
+  border: 1px solid rgba(255, 210, 87, .25);
+  font-weight: 900;
+}
+
 @media (max-width: 640px) {
   .app {
     padding: 18px;

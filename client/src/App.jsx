@@ -149,6 +149,10 @@ function App() {
     });
   }
 
+  function leaveRoom() {
+    window.location.reload();
+  }
+
   function toggleLobbyReady() {
     socket.emit("lobby:ready");
   }
@@ -253,24 +257,51 @@ function App() {
 
       <h1 className="slide-up">{t.title}</h1>
 
-      <div className="card slide-up">
-        <h2>{t.status}: {game?.state}</h2>
+      <div className="top-game-bar slide-up">
 
-        <p>
-          {t.roomCode}:
-          <span className="room-code">{game?.roomCode || "—"}</span>
-        </p>
+        <div className="top-game-item">
+          <span className="top-label">{t.status}</span>
+          <strong>{game?.state}</strong>
+        </div>
 
-        <p>
-          {t.category}:
-          <span className="category-badge">
-            {currentCategory?.name?.[lang] || currentCategory?.name || "—"}
+        <div className="top-game-item">
+          <span className="top-label">{t.roomCode}</span>
+          <strong className="room-code">
+            {game?.roomCode || "—"}
+          </strong>
+        </div>
+
+        <div className="top-game-item">
+          <span className="top-label">
+            {lang === "ar" ? "التصنيف" : "Category"}
           </span>
-        </p>
 
-        <p>{t.players}: {playersCount}</p>
-        <p>{t.readyPlayers}: {lobbyReadyCount} / {playersCount}</p>
-        <p>{t.youAre}: {isHost ? t.host : t.player}</p>
+          <strong className="category-badge">
+            {currentCategory?.name?.[lang] || currentCategory?.name}
+          </strong>
+        </div>
+
+        <div className="top-game-item">
+          <span className="top-label">{t.players}</span>
+          <strong>{playersCount}</strong>
+        </div>
+
+        <div className="top-game-item">
+          <span className="top-label">{t.readyPlayers}</span>
+          <strong>
+            {lobbyReadyCount}/{playersCount}
+          </strong>
+        </div>
+
+        <button
+          className="button leave-button"
+          onClick={leaveRoom}
+        >
+          {lang === "ar"
+            ? "خروج"
+            : "Leave"}
+        </button>
+
       </div>
 
       {game?.state === "LOBBY" && (

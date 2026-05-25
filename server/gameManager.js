@@ -3,7 +3,7 @@ const categories = require("./words");
 const DEFAULT_CATEGORY = "food";
 const DEFAULT_TIME_LIMIT = 60;
 const DEFAULT_LANG = "ar";
-const MIN_PLAYERS = 3;
+const MIN_PLAYERS = 1;  //const MIN_PLAYERS = 3;
 
 let game = createInitialGame();
 

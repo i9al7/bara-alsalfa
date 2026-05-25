@@ -24,7 +24,12 @@
     const playersCount = game?.players?.length || 0;
     const lobbyReadyCount = game?.lobbyReady?.length || 0;
     const isLobbyReady = game?.lobbyReady?.includes(socket.id);
-    const allPlayersReady = playersCount >= 3 && lobbyReadyCount === playersCount;
+    const MIN_PLAYERS = 1;
+
+const allPlayersReady =
+  playersCount >= MIN_PLAYERS &&
+  lobbyReadyCount === playersCount;
+    //const allPlayersReady = playersCount >= 3 && lobbyReadyCount === playersCount;
     const currentCategory = categories.find(cat => cat.id === game?.category) || categories[0];
   
     useEffect(() => {

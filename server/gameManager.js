@@ -3,7 +3,7 @@ const categories = require("./words");
 const DEFAULT_CATEGORY = "food";
 const DEFAULT_TIME_LIMIT = 60;
 const DEFAULT_LANG = "ar";
-const MIN_PLAYERS = 1;  //const MIN_PLAYERS = 3;
+const MIN_PLAYERS = 3;
 
 let game = createInitialGame();
 
@@ -203,36 +203,8 @@ function randomItem(arr) {
 function shuffleArray(arr) {
     return [...arr].sort(() => Math.random() - 0.5);
 }
-/*
-function buildQuestionQueue() {
-    const shuffled = shuffleArray(game.players);
-
-    game.questionQueue = shuffled.map((player, index) => {
-        const nextPlayer = shuffled[(index + 1) % shuffled.length];
-
-        return {
-            askerId: player.id,
-            targetId: nextPlayer.id
-        };
-    });
-
-    game.currentTurnIndex = 0;
-}
-*/
 
 function buildQuestionQueue() {
-    if (game.players.length === 1) {
-        game.questionQueue = [
-            {
-                askerId: game.players[0].id,
-                targetId: game.players[0].id
-            }
-        ];
-
-        game.currentTurnIndex = 0;
-        return;
-    }
-
     const shuffled = shuffleArray(game.players);
 
     game.questionQueue = shuffled.map((player, index) => {
@@ -359,9 +331,7 @@ function vote(voterId, targetId) {
     if (game.state !== "VOTING") return { ok: false, error: "INVALID_STATE" };
     if (!getPlayer(voterId)) return { ok: false, error: "VOTER_NOT_FOUND" };
     if (!getPlayer(targetId)) return { ok: false, error: "INVALID_TARGET" };
-    if (voterId === targetId && game.players.length > 1) {
-        return { ok: false, error: "CANT_VOTE_SELF" };
-    } //if (voterId === targetId) return { ok: false, error: "CANT_VOTE_SELF" };
+    if (voterId === targetId) return { ok: false, error: "CANT_VOTE_SELF" };
     if (game.votes[voterId]) return { ok: false, error: "ALREADY_VOTED" };
 
     game.votes[voterId] = targetId;

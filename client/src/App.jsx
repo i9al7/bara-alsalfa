@@ -24,7 +24,7 @@
     const playersCount = game?.players?.length || 0;
     const lobbyReadyCount = game?.lobbyReady?.length || 0;
     const isLobbyReady = game?.lobbyReady?.includes(socket.id);
-    const MIN_PLAYERS = 1;
+    const MIN_PLAYERS = 3;
 
 const allPlayersReady =
   playersCount >= MIN_PLAYERS &&

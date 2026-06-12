@@ -199,12 +199,12 @@ function App() {
   if (!joined) {
     return (
       <div className="center-screen fade-in" dir={lang === "ar" ? "rtl" : "ltr"}>
+        <div className="lang-switch">
+          <button className={lang === "ar" ? "active-lang" : ""} onClick={() => changeLang("ar")}>عربي</button>
+          <button className={lang === "en" ? "active-lang" : ""} onClick={() => changeLang("en")}>English</button>
+        </div>
+        
         <div className="auth-box scale-in">
-          <div className="lang-switch">
-            <button className={lang === "ar" ? "active-lang" : ""} onClick={() => changeLang("ar")}>عربي</button>
-            <button className={lang === "en" ? "active-lang" : ""} onClick={() => changeLang("en")}>English</button>
-          </div>
-
           <h1 className="logo">{t.title}</h1>
 
           {!discordUser && <p>{t.loadingDiscord}</p>}
@@ -212,7 +212,7 @@ function App() {
           {discordUser && !mode && (
             <div className="row slide-up">
               <button className="button" onClick={() => setMode("create")}>{t.createRoom}</button>
-              <button className="button green" onClick={() => setMode("join")}>{t.joinRoom}</button>
+              <button className="button" onClick={() => setMode("join")}>{t.joinRoom}</button>
             </div>
           )}
 
@@ -299,7 +299,7 @@ function App() {
         </div>
 
         <button
-          className="button leave-button"
+          className="button red leave-button"
           onClick={leaveRoom}
         >
           {lang === "ar"
@@ -312,7 +312,7 @@ function App() {
       {game?.state === "LOBBY" && (
         <div className="card slide-up">
           <h3>{t.readyCheck}</h3>
-          <button className={isLobbyReady ? "button" : "button green"} onClick={toggleLobbyReady}>
+          <button className={isLobbyReady ? "button red" : "button green"} onClick={toggleLobbyReady}>
             {isLobbyReady ? t.unreadyButton : t.readyButton}
           </button>
           <p>{t.readyHint}</p>

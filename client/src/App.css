@@ -1,23 +1,22 @@
 :root {
-  --bg: #07090f;
-  --bg-2: #0d1018;
+  --bg: #0a0d14;
+  --bg-2: #111522;
 
   --card:
     linear-gradient(180deg,
-      rgba(16, 18, 27, .94),
-      rgba(10, 12, 20, .92));
+      rgba(16, 18, 27, 0.103),
+      rgba(10, 12, 20, 0.92));
 
   --card-2:
     linear-gradient(180deg,
-      rgba(21, 24, 35, .96),
-      rgba(15, 17, 27, .96));
+      rgba(21, 24, 35, .96) rgba(15, 17, 27, .96));
 
   --border: rgba(255, 255, 255, .07);
 
-  --primary: #355dff;
+  --primary: #355dff05;
   --primary-light: #5f7dff;
 
-  --danger: #ff3434;
+  --danger: #ff343405;
   --danger-dark: #b91d1d;
 
   --success: #57f287;
@@ -26,8 +25,8 @@
   --text: #ffffff;
   --muted: rgba(255, 255, 255, .62);
 
-  --shadow-blue: 0 0 40px rgba(53, 93, 255, .18);
-  --shadow-red: 0 0 40px rgba(255, 52, 52, .12);
+  --shadow-blue: 0 0 40px rgba(47, 88, 255, 0.12);
+  --shadow-red: 0 0 50px rgba(255, 59, 87, 0.08);
 }
 
 * {
@@ -42,9 +41,18 @@ body,
 
 body {
   margin: 0;
-  background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  background:
+    linear-gradient(rgba(5, 7, 12, .78),
+      rgba(5, 7, 12, .9)),
+    url("/bara-alsalfa-Background.png");
+
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-color: var(--bg);
 }
 
 button,
@@ -58,13 +66,7 @@ select {
 .loading-screen {
   min-height: 100vh;
   color: var(--text);
-  background:
-    linear-gradient(rgba(5, 7, 12, .78),
-      rgba(5, 7, 12, .9)),
-    url("/bara-alsalfa-Background.png");
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
+  background: transparent;
 }
 
 .app {
@@ -107,7 +109,7 @@ p {
   padding: 26px;
   margin-bottom: 20px;
   box-shadow:
-    0 24px 60px rgba(0, 0, 0, .45),
+    0 10px 15px rgba(0, 0, 0, 0.45),
     var(--shadow-blue),
     var(--shadow-red);
   backdrop-filter: blur(18px);
@@ -170,41 +172,75 @@ p {
 
 .button {
   min-height: 48px;
-  background:
-    linear-gradient(135deg,
-      var(--primary),
-      #2846c7);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, .08);
-  border-radius: 18px;
-  padding: 14px 22px;
+  background: var(--primary);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px 24px;
   cursor: pointer;
   font-size: 15px;
-  font-weight: 900;
-  transition: .22s ease;
-  box-shadow: 0 10px 24px rgba(53, 93, 255, .24);
+  font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(47, 88, 255, 0.2);
 }
 
 .button:hover:not(:disabled) {
-  transform: translateY(-3px) scale(1.02);
-  filter: brightness(1.08);
-  box-shadow: 0 16px 32px rgba(53, 93, 255, .38);
+  transform: translateY(-2px);
+  background: var(--primary-light);
+  box-shadow: 0 12px 24px rgba(47, 88, 255, 0.35);
 }
 
 .button:active:not(:disabled) {
-  transform: scale(.98);
+  transform: translateY(0) scale(.98);
 }
 
 .button:disabled {
-  opacity: .45;
+  background: var(--bg-2);
+  color: var(--muted);
+  border: 1px solid var(--border);
   cursor: not-allowed;
-  filter: grayscale(.25);
+  opacity: 0.6;
   transform: none;
+  box-shadow: none;
 }
 
-.green {
-  background: linear-gradient(135deg, var(--success), #2f8f65);
-  box-shadow: 0 10px 24px rgba(87, 242, 135, .18);
+.button.green {
+  background: linear-gradient(135deg, var(--success), #239e5c);
+  color: var(--text);
+  box-shadow: 0 4px 14px rgba(0, 230, 118, 0.2);
+}
+
+.button.green:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  background: var(--success);
+  box-shadow: 0 12px 28px rgba(0, 230, 118, 0.35);
+}
+
+.button.green:active:not(:disabled) {
+  transform: scale(.98);
+  box-shadow: 0 4px 8px rgba(0, 230, 118, 0.15);
+}
+
+
+.button.red {
+  background: var(--danger);
+  color: var(--text);
+  box-shadow: 0 4px 12px rgba(255, 47, 47, 0.2);
+}
+
+.button.red:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+  background: var(--danger-dark);
+  box-shadow: 0 12px 28px rgba(255, 47, 47, 0.35);
+}
+
+.button.red:active:not(:disabled) {
+  transform: scale(.98);
+  box-shadow: 0 4px 8px rgba(255, 47, 47, 0.15);
 }
 
 .row {
@@ -224,6 +260,29 @@ p {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.lang-switch {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.lang-switch button {
+  border: 1px solid rgba(255, 255, 255, .15);
+  background: rgba(255, 255, 255, .08);
+  color: white;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.lang-switch button.active-lang {
+  background: #5865f2;
+  border-color: #5865f2;
 }
 
 .auth-box {
@@ -303,7 +362,7 @@ p {
   border: 1px solid rgba(255, 255, 255, .06);
   border-radius: 22px;
   padding: 18px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, .28);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, .28);
   transition: .22s ease;
 }
 

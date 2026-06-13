@@ -15,16 +15,8 @@ function isDiscordActivity() {
 export async function setupDiscordUser() {
   if (!clientId) throw new Error("Missing VITE_DISCORD_CLIENT_ID");
 
-  // if (!isDiscordActivity()) {
-  //   throw new Error("Not running inside Discord Activity");
-  // }
-
   if (!isDiscordActivity()) {
-    return {
-      id: "local-user-1",
-      username: "Local Tester",
-      avatar: null
-    };
+    throw new Error("Not running inside Discord Activity");
   }
 
   discordSdk = new DiscordSDK(clientId);

@@ -280,7 +280,7 @@ function App() {
           <img src="/ast-logo.png" alt="AST" />
           <div>
             <span className="ast-team-title">AST Team</span>
-            <small>Join our Discord Community</small>
+            <small>{t.astsmall}</small>
           </div>
         </a>
       </div>

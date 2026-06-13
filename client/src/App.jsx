@@ -203,7 +203,22 @@ function App() {
           <button className={lang === "ar" ? "active-lang" : ""} onClick={() => changeLang("ar")}>عربي</button>
           <button className={lang === "en" ? "active-lang" : ""} onClick={() => changeLang("en")}>English</button>
         </div>
-        
+
+        <div className="ast-team-btn-wrapper">
+          <a
+            href="https://discord.gg/ast26"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ast-team-btn"
+          >
+            <img src="/ast-logo.png" alt="AST" />
+            <div>
+              <span className="ast-team-title">AST Team</span>
+              <small>{t.astsmall}</small>
+            </div>
+          </a>
+        </div>
+
         <div className="auth-box scale-in">
           <h1 className="logo">{t.title}</h1>
 
@@ -220,8 +235,8 @@ function App() {
             <div className="slide-up">
               <p>{t.createAs}: {discordUser?.username}</p>
               <div className="row">
-                <button className="button" onClick={createLobby}>{t.createRoom}</button>
-                <button className="button green" onClick={() => setMode(null)}>{t.back}</button>
+                <button className="button green" onClick={createLobby}>{t.createRoom}</button>
+                <button className="button red" onClick={() => setMode(null)}>{t.back}</button>
               </div>
             </div>
           )}
@@ -237,7 +252,7 @@ function App() {
 
               <div className="row">
                 <button className="button green" onClick={joinLobby}>{t.join}</button>
-                <button className="button" onClick={() => setMode(null)}>{t.back}</button>
+                <button className="button red" onClick={() => setMode(null)}>{t.back}</button>
               </div>
             </div>
           )}
@@ -251,13 +266,23 @@ function App() {
   return (
     <div className="app fade-in" dir={lang === "ar" ? "rtl" : "ltr"}>
       <div className="lang-switch">
-        <button className={lang === "ar" ? "active-lang" : ""} onClick={() => changeLang("ar")}>
-          عربي
-        </button>
+        <button className={lang === "ar" ? "active-lang" : ""} onClick={() => changeLang("ar")}>عربي</button>
+        <button className={lang === "en" ? "active-lang" : ""} onClick={() => changeLang("en")}>English</button>
+      </div>
 
-        <button className={lang === "en" ? "active-lang" : ""} onClick={() => changeLang("en")}>
-          English
-        </button>
+      <div className="ast-team-btn-wrapper">
+        <a
+          href="https://discord.gg/ast26"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ast-team-btn"
+        >
+          <img src="/ast-logo.png" alt="AST" />
+          <div>
+            <span className="ast-team-title">AST Team</span>
+            <small>Join our Discord Community</small>
+          </div>
+        </a>
       </div>
 
       <h1 className="slide-up">{t.title}</h1>

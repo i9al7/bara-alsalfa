@@ -19,7 +19,7 @@
   --danger: #ff343405;
   --danger-dark: #b91d1d;
 
-  --success: #57f287;
+  --success: rgb(0, 248, 79);
   --gold: #ffd257;
 
   --text: #ffffff;
@@ -172,14 +172,14 @@ p {
 
 .button {
   min-height: 48px;
-  background: var(--primary);
+  background: none;
   color: var(--text);
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 16px;
   padding: 12px 24px;
   cursor: pointer;
-  font-size: 15px;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: bolder;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -189,8 +189,7 @@ p {
 
 .button:hover:not(:disabled) {
   transform: translateY(-2px);
-  background: var(--primary-light);
-  box-shadow: 0 12px 24px rgba(47, 88, 255, 0.35);
+  color: var(--primary-light);
 }
 
 .button:active:not(:disabled) {
@@ -215,8 +214,8 @@ p {
 
 .button.green:hover:not(:disabled) {
   transform: translateY(-2px) scale(1.02);
-  background: var(--success);
-  box-shadow: 0 12px 28px rgba(0, 230, 118, 0.35);
+  color: var(--text);
+  box-shadow: 0 10px 15px rgba(0, 248, 79, .35);
 }
 
 .button.green:active:not(:disabled) {
@@ -226,27 +225,25 @@ p {
 
 
 .button.red {
-  background: var(--danger);
+  background: none;
   color: var(--text);
-  box-shadow: 0 4px 12px rgba(255, 47, 47, 0.2);
 }
 
 .button.red:hover:not(:disabled) {
   transform: translateY(-2px) scale(1.02);
-  background: var(--danger-dark);
-  box-shadow: 0 12px 28px rgba(255, 47, 47, 0.35);
+  color: var(--danger-dark);
 }
 
 .button.red:active:not(:disabled) {
   transform: scale(.98);
-  box-shadow: 0 4px 8px rgba(255, 47, 47, 0.15);
 }
 
 .row {
   display: flex;
+  justify-content: center;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 18px;
 }
 
 .error {
@@ -262,30 +259,57 @@ p {
 }
 
 .lang-switch {
+  display: flex;
   position: absolute;
   top: 22px;
   right: 22px;
-  display: flex;
   gap: 8px;
   z-index: 10;
 }
 
 .lang-switch button {
-  border: 1px solid rgba(255, 255, 255, .15);
-  background: rgba(255, 255, 255, .08);
-  color: white;
-  padding: 8px 14px;
-  border-radius: 999px;
+  min-height: 48px;
+  background: var(--bg-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px 24px;
+  font-size: 15px;
+  font-weight: bold;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background .2s ease,
+    border-color .2s ease,
+    color .2s ease,
+    box-shadow .2s ease;
+}
+
+.lang-switch button:hover {
+  border-color: var(--primary-light);
+  color: var(--primary-light);
+  box-shadow:
+    0 0 15px rgba(95, 125, 255, .18);
 }
 
 .lang-switch button.active-lang {
-  background: #5865f2;
-  border-color: #5865f2;
+  background: var(--primary-light);
+  border-color: var(--primary-light);
+  color: white;
+
 }
 
 .auth-box {
+  display: flex;
+  flex-direction: column;
   width: min(460px, calc(100% - 32px));
+  gap: 10px;
+  margin-bottom: 18px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .logo {
@@ -314,6 +338,48 @@ p {
 
 .lang-switch button:hover {
   border-color: rgba(95, 125, 255, .45);
+}
+
+.ast-team-btn {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  bottom: 22px;
+  right: 22px;
+  gap: 12px;
+  background: none;
+  border: none;
+  border-radius: 18px;
+  padding: 12px 18px;
+  color: white;
+  text-decoration: none;
+  transition: .25s ease;
+  margin-bottom: 18px;
+
+}
+
+.ast-team-btn:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 10px 15px rgba(0, 0, 0, 0.45),
+    var(--shadow-blue),
+    var(--shadow-red);
+}
+
+.ast-team-btn img {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+}
+
+.ast-team-title {
+  display: block;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.ast-team-btn small {
+  color: rgba(255, 255, 255, .65);
 }
 
 .active-lang {

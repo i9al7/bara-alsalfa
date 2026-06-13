@@ -16,6 +16,8 @@ export const translations = {
     discordNotLoaded: "لم يتم تحميل حساب Discord بعد",
     enterCode: "اكتب كود الروم",
 
+    astsmall: "انضم إلى مجتمعنا على ديسكورد",
+
     createRoom: "إنشاء روم",
     joinRoom: "دخول برمز",
     join: "دخول",
@@ -91,6 +93,8 @@ export const translations = {
     serverError: "Server connection failed",
     discordNotLoaded: "Discord account has not loaded yet",
     enterCode: "Enter room code",
+
+    astsmall: "Join our Discord Community",
 
     createRoom: "Create Room",
     joinRoom: "Join by Code",

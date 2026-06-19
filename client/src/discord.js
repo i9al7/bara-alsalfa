@@ -9,7 +9,11 @@ const serverUrl = import.meta.env.PROD
 let discordSdk = null;
 
 function isDiscordActivity() {
-  return new URLSearchParams(window.location.search).has("frame_id");
+  try {
+    return window.parent !== window;
+  } catch {
+    return false;
+  }
 }
 
 export async function setupDiscordUser() {

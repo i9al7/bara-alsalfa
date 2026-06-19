@@ -8,55 +8,44 @@ const serverUrl = import.meta.env.PROD
 
 let discordSdk = null;
 
+function isDiscordActivity() {
+  return new URLSearchParams(window.location.search).has("frame_id");
+}
+
 export async function setupDiscordUser() {
   if (!clientId) throw new Error("Missing VITE_DISCORD_CLIENT_ID");
 
-  try {
-    discordSdk = new DiscordSDK(clientId);
-
-    await discordSdk.ready();
-
-    console.log("Discord Ready");
-
-    const { code } = await discordSdk.commands.authorize({
-      client_id: clientId,
-      response_type: "code",
-      state: "",
-      prompt: "none",
-      scope: ["identify"]
-    });
-
-    console.log("Code:", code);
-
-    const tokenRes = await fetch(`${serverUrl}/api/discord/token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ code })
-    });
-
-    console.log("Token Response:", tokenRes.status);
-
-    const data = await tokenRes.json();
-
-    console.log("Token Data:", data);
-
-    const auth = await discordSdk.commands.authenticate({
-      access_token: data.access_token
-    });
-
-    console.log("Authenticated User:", auth.user);
-
-    return auth.user;
-
-  } catch (err) {
-    console.error("DISCORD LOGIN ERROR:", err);
-
-    return {
-      id: "local-user-1",
-      username: "Local Tester",
-      avatar: null
-    };
+  if (!isDiscordActivity()) {
+    throw new Error("Not running inside Discord Activity");
   }
+
+  discordSdk = new DiscordSDK(clientId);
+
+  await discordSdk.ready();
+
+  const { code } = await discordSdk.commands.authorize({
+    client_id: clientId,
+    response_type: "code",
+    state: "",
+    prompt: "none",
+    scope: ["identify"]
+  });
+
+  const tokenRes = await fetch(`${serverUrl}/api/discord/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code })
+  });
+
+  if (!tokenRes.ok) {
+    throw new Error("Failed to exchange Discord code");
+  }
+
+  const data = await tokenRes.json();
+
+  const auth = await discordSdk.commands.authenticate({
+    access_token: data.access_token
+  });
+
+  return auth.user;
 }

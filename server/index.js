@@ -27,6 +27,10 @@ app.post("/api/discord/token", async (req, res) => {
             return res.status(400).json({ error: "Missing code" });
         }
 
+        const redirectUri =
+            process.env.DISCORD_REDIRECT_URI ||
+            "https://1506385774587674654.discordsays.com/.proxy/api/discord/callback";
+
         const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
             method: "POST",
             headers: {
@@ -36,14 +40,18 @@ app.post("/api/discord/token", async (req, res) => {
                 client_id: process.env.DISCORD_CLIENT_ID,
                 client_secret: process.env.DISCORD_CLIENT_SECRET,
                 grant_type: "authorization_code",
-                code
+                code,
+                redirect_uri: redirectUri
             })
         });
 
         const tokenData = await tokenRes.json();
 
+        console.log("Discord token status:", tokenRes.status);
+        console.log("Discord token data:", tokenData);
+
         if (!tokenRes.ok) {
-            return res.status(400).json(tokenData);
+            return res.status(tokenRes.status).json(tokenData);
         }
 
         const userRes = await fetch("https://discord.com/api/users/@me", {

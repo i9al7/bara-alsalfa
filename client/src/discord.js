@@ -16,6 +16,8 @@ export async function setupDiscordUser() {
 
     await discordSdk.ready();
 
+    console.log("Discord Ready");
+
     const { code } = await discordSdk.commands.authorize({
       client_id: clientId,
       response_type: "code",
@@ -24,21 +26,32 @@ export async function setupDiscordUser() {
       scope: ["identify"]
     });
 
+    console.log("Code:", code);
+
     const tokenRes = await fetch(`${serverUrl}/api/discord/token`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({ code })
     });
 
+    console.log("Token Response:", tokenRes.status);
+
     const data = await tokenRes.json();
+
+    console.log("Token Data:", data);
 
     const auth = await discordSdk.commands.authenticate({
       access_token: data.access_token
     });
 
+    console.log("Authenticated User:", auth.user);
+
     return auth.user;
+
   } catch (err) {
-    console.error(err);
+    console.error("DISCORD LOGIN ERROR:", err);
 
     return {
       id: "local-user-1",
